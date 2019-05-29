@@ -16,15 +16,11 @@ public class Particle implements Cloneable {
 	private Vector2D position;
 	private Vector2D velocity;
 	private Vector2D force;
+	private Vector2D desiredTarget;
 	private Set<Particle> neighbours;
 
 	public Particle(int id, double radius, double mass) {
-		this.id = id;
-		this.radius = radius;
-		this.mass = mass;
-		this.normalForce = 0.0;
-		this.desiredSpeed = 0.0;
-		this.neighbours = new HashSet<>();
+		this(id, radius, mass, 0.0);
 	}
 
 	public Particle(int id, double radius, double mass, double desiredSpeed) {
@@ -33,6 +29,7 @@ public class Particle implements Cloneable {
 		this.mass = mass;
 		this.normalForce = 0.0;
 		this.desiredSpeed = desiredSpeed;
+		this.desiredTarget = new Vector2D(10, 0);
 		this.neighbours = new HashSet<>();
 	}
 
@@ -114,6 +111,17 @@ public class Particle implements Cloneable {
 				+ Math.pow(position.getY() - particlePosition.getY(), 2));
 	}
 
+	/**
+	 * The distance between points contemplates border-to-border distance.
+	 * That is why the radii are subtracted.
+	 */
+	public double getDistanceBetweenBorders(Particle particle) {
+		Vector2D particlePosition = particle.getPosition();
+		return Math.sqrt(Math.pow(position.getX() - particlePosition.getX(), 2) +
+				Math.pow(position.getY() - particlePosition.getY(), 2))
+				- radius - particle.getRadius();
+	}
+
 	public void addNeighbour(Particle neighbour) {
 		this.neighbours.add(neighbour);
 	}
@@ -138,4 +146,27 @@ public class Particle implements Cloneable {
 		return 2 * Math.PI * radius;
 	}
 
+	public double getDesiredSpeed() {
+		return desiredSpeed;
+	}
+
+	public Vector2D getDesiredTarget() {
+		return desiredTarget;
+	}
+
+	public Vector2D getVectorToTarget() {
+		double d = Math.sqrt(Math.pow(position.getX() - desiredTarget.getX(), 2)
+				+ Math.pow(position.getY() - desiredTarget.getY(), 2));
+
+		// Calculate x component of target unit vector etarget
+		double Etx = (desiredTarget.getX() - position.getX()) / d;
+
+		// Calculate y component of target unit vector etarget
+		double Ety = (desiredTarget.getY() - position.getY()) / d;
+
+		double x = desiredSpeed * Etx;
+		double y = desiredSpeed * Ety;
+
+		return new Vector2D(x, y);
+	}
 }
