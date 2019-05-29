@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class GravitationalGranularSilo {
+public class SocialForceModel {
 
 	private static double boxHeight = 1.5;
 	private static double boxWidth = 0.3;
