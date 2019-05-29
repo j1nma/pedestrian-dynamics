@@ -113,16 +113,12 @@ public class GravitationalGranularSilo {
 			particles.stream().parallel().forEach(particle -> particle.clearNeighbours());
 
 
-			// TODO imprimir posicion para ubicar, velocidad para la flechita en la simu,
+			// print current frame if need to
 			if ((currentFrame % printFrame) == 0) {
 				buffer.write(String.valueOf(particles.size()));
 				buffer.newLine();
 				buffer.write(String.valueOf(currentFrame));
 				buffer.newLine();
-
-				AtomicReference<Double> totalKinetic = new AtomicReference<>(0.0);
-
-				AtomicReference<Integer> densityCounter = new AtomicReference<>(0);
 
 				particles.stream().parallel().forEach(p -> {
 					try {
@@ -131,25 +127,8 @@ public class GravitationalGranularSilo {
 						e1.printStackTrace();
 					}
 
-					totalKinetic.accumulateAndGet(p.getKineticEnergy(), (x, y) -> x + y);
-
-//					if (p.getPosition().getY() >= (boxHeight / 10)
-//							&& p.getPosition().getY() <= ((boxHeight / 10) + 0.35)
-//							&& p.getPosition().getX() >= (boxWidth / 2 - boxDiameter / 2)
-//							&& p.getPosition().getX() <= (boxWidth / 2 + boxDiameter / 2)) {
-//						densityCounter.accumulateAndGet(1, (x, y) -> x + y);
-//					}
-
-//					if (p.getPosition().getY() >= (boxHeight / 10)
-//							&& p.getPosition().getY() <= ((boxHeight / 10) + 0.35)) {
-//						densityCounter.accumulateAndGet(1, (x, y) -> x + y);
-//					}
 				});
 
-//				System.out.println("Density:" + densityCounter.get() / (boxWidth * 0.35));
-
-				energyBuffer.write(String.valueOf(time) + " " + String.valueOf(totalKinetic.get()));
-				energyBuffer.newLine();
 			}
 
 			System.out.println("Current progress: " + 100 * (time / limitTime));
@@ -262,6 +241,7 @@ public class GravitationalGranularSilo {
 
 	/**
 	 * For the ones that make contact, add a fake particle to the set of neighbours.
+	 * TODO refactor codigo repetido y casos ifs q nunca entraria
 	 */
 	private static void addFakeWallParticles(Particle particle, Set<Particle> neighbours) {
 		int fakeId = -1;
@@ -356,7 +336,6 @@ public class GravitationalGranularSilo {
 				p.getPosition().getX() + " " +
 				p.getPosition().getY() + " " +
 				p.getVelocity().getX() + " " +
-				p.getVelocity().getY() + " " +
-				p.calculatePressure() + " \n";
+				p.getVelocity().getY() + " \n";
 	}
 }
