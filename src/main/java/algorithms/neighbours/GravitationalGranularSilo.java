@@ -63,7 +63,7 @@ public class GravitationalGranularSilo {
 		// Print to buffer
 		printFirstFrame(buffer, energyBuffer, particles);
 
-		Criteria timeCriteria = new TimeCriteria(limitTime);
+		Criteria timeCriteria = new TimeCriteria(limitTime); // TODO hacer un criteria de cuantos quedan en la box
 
 		// Print frame
 		int currentFrame = 1;
@@ -82,12 +82,10 @@ public class GravitationalGranularSilo {
 			particles.stream().parallel().forEach(p -> {
 				Set<Particle> neighboursCustom = new HashSet<>(p.getNeighbours());
 				neighboursCustom = filterNeighbors(p, neighboursCustom);
-				addFakeWallParticles(p, neighboursCustom);
+				addFakeWallParticles(p, neighboursCustom); // TODO revisar pero en principio queda igual a TP5. una particula falsa ojo solo usar para la fuerza granular no las otras dos
 				calculateForce(p, neighboursCustom, kN, kT);
 			});
 
-			// Save current max pressure for color calculation TODO: paralelizar
-			currentMaxPressure = Collections.max(particles, Comparator.comparing(Particle::calculatePressure)).calculatePressure();
 
 			// Only at first frame, initialize previous position of Verlet with Euler
 			if (time == dt) {
@@ -109,6 +107,10 @@ public class GravitationalGranularSilo {
 			}
 
 			// Relocate particles that go outside box a distance of L/10 and clear neighbours
+			// TODO en vez de relocate, si la particula llega abajo, matarla
+			// OJO con el counter de particulas, acordarse que ovito espera la lista de particulas y de antemano cuantas son.
+			// si matamaos particulas habria q ver que numero total le estamos mandando, hardcodeado el numero original o particles.size
+			// en cada iteracion
 			final List<Particle> finalParticles = particles;
 			particles.stream().parallel().forEach(p -> {
 				if (p.getPosition().getY() <= 0) {
@@ -126,6 +128,9 @@ public class GravitationalGranularSilo {
 				p.clearNeighbours();
 			});
 
+
+			// TODO imprimir posicion para ubicar, velocidad para la flechita en la simu,
+			// TODO cualquier otro dato ir hablarlo
 			if ((currentFrame % printFrame) == 0) {
 				buffer.write(String.valueOf(particles.size()));
 				buffer.newLine();
@@ -215,6 +220,11 @@ public class GravitationalGranularSilo {
 	 * Calculate sum of forces
 	 */
 	private static void calculateForce(Particle particle, Set<Particle> neighbours, double kN, double kT) {
+
+		// todo esto hace la sumatoria de Fuerzas de Fgranular. lo que habria que hacer es hacer las Fsocial y la F deseo y luego sumarlas
+		//  o bien en una sola iteracion que es la de abajo en la sumatoria agregar tmb Fdeseo y Fsocial
+
+
 		// Particle normal force reset and accumulator
 		particle.resetNormalForce();
 		AtomicReference<Double> atomicNormalForce = new AtomicReference<>(0.0);
