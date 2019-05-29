@@ -14,11 +14,7 @@ public class SocialForceModel {
 	private static double boxWidth = 0.3;
 	private static double boxDiameter = 0.15;
 
-	private static final double G = -10;
-
 	private static final double MAX_INTERACTION_RADIUS = 0.03 / 2;
-
-	private static double currentMaxPressure = 0.0;
 
 	// Initial State
 	private static double time = 0.0;
@@ -66,10 +62,10 @@ public class SocialForceModel {
 		// Print frame
 		int currentFrame = 1;
 		int printFrame = (int) Math.ceil(printDeltaT / dt);
-		AtomicReference<Boolean> isDone = new AtomicReference<>(false);
+		AtomicReference<Integer> leftInBox = new AtomicReference<>(1);
 
-		while (!isDone.get()) {
-			isDone.set(true);
+		while (leftInBox.get() != 0) {
+			leftInBox.set(0);
 			time += dt;
 
 			// Calculate neighbours
@@ -83,7 +79,7 @@ public class SocialForceModel {
 				Set<Particle> neighboursCustom = new HashSet<>(p.getNeighbours());
 				neighboursCustom = filterNeighbors(p, neighboursCustom);
 				addFakeWallParticles(p, neighboursCustom);
-				calculateForce(p, neighboursCustom, kN, kT);
+				calculateForce(p, neighboursCustom, kN, kT, A, B, τ);
 			});
 
 
@@ -101,11 +97,13 @@ public class SocialForceModel {
 								new VerletWithNeighbours(new Vector2D(posX, posY)));
 					}
 				});
+				leftInBox.set(particles.size());
 			} else {
 				// Update position
 				particles.stream().parallel().forEach(p -> {
 					moveParticle(p, dt);
-					if (p.getPosition().getY() > boxHeight / 10) isDone.set(false);
+					if (p.getPosition().getY() > boxHeight / 10 && p.getPosition().getY() <= boxHeight * 1.1)
+						leftInBox.accumulateAndGet(1, (x, y) -> x + y);
 				});
 			}
 
@@ -134,11 +132,9 @@ public class SocialForceModel {
 
 			}
 
-			System.out.println("Current progress: " + 100 * (time / limitTime));
+			System.out.println("Particles Left: " + leftInBox.get());
 			currentFrame++;
 		}
-
-		System.out.println("Max pressure: " + currentMaxPressure);
 	}
 
 
@@ -155,19 +151,22 @@ public class SocialForceModel {
 	/**
 	 * Calculate sum of forces
 	 */
-	private static void calculateForce(Particle particle, Set<Particle> neighbours, double kN, double kT) {
+	private static void calculateForce(Particle particle, Set<Particle> neighbours, double kN, double kT, double A, double B, double τ) {
 
 		// todo esto hace la sumatoria de Fuerzas de Fgranular. lo que habria que hacer es hacer las Fsocial y la F deseo y luego sumarlas
 		//  o bien en una sola iteracion que es la de abajo en la sumatoria agregar tmb Fdeseo y Fsocial
 
 
 		// Particle normal force reset and accumulator
-		particle.resetNormalForce();
-		AtomicReference<Double> atomicNormalForce = new AtomicReference<>(0.0);
+//		particle.resetNormalForce();
+//		AtomicReference<Double> atomicNormalForce = new AtomicReference<>(0.0);
 
 		// Particle force calculation
-		Vector2D F = new Vector2D(0, particle.getMass() * G);
+		Vector2D F = new Vector2D(0, 0);
 		F = neighbours.stream().map(p2 -> {
+
+			// Sum of forces
+			Vector2D sum = new Vector2D(0, 0);
 
 			// Calculate distance between centers
 			double distance = particle.getPosition().distance(p2.getPosition());
@@ -175,6 +174,7 @@ public class SocialForceModel {
 			// Calculate epsilon
 			double eps = particle.getRadius() + p2.getRadius() - distance;
 
+			// Granular force
 			if (eps > 0.0) {
 				// Calculate Fn
 				double Fn = -kN * eps;
@@ -193,19 +193,48 @@ public class SocialForceModel {
 				double Fx = Fn * Enx + Ft * (-Eny);
 				double Fy = Fn * Eny + Ft * Enx;
 
-				atomicNormalForce.accumulateAndGet(Fn, (x, y) -> x + y);
+//				atomicNormalForce.accumulateAndGet(Fn, (x, y) -> x + y);
 
-				return new Vector2D(Fx, Fy);
-			} else {
-				return new Vector2D(0.0, 0.0);
+				sum = sum.add(new Vector2D(Fx, Fy));
 			}
+
+
+			/* Start Social force */
+
+			// Calculate distance between centers
+			double borderDistance = particle.getDistanceBetweenBorders(p2);
+
+			double FnSocial = A * Math.exp((-borderDistance) / B);
+
+			// Calculate x component of contact unit vector e
+			double Enx = (p2.getPosition().getX() - particle.getPosition().getX()) / borderDistance;
+
+			// Calculate y component of contact unit vector e
+			double Eny = (p2.getPosition().getY() - particle.getPosition().getY()) / borderDistance;
+
+			double FxSocial = FnSocial * Enx;
+			double FySocial = FnSocial * Eny;
+
+			sum = sum.add(new Vector2D(FxSocial, FySocial));
+
+			/* End Social force */
+
+			return sum;
 		}).reduce(F, Vector2D::add);
+
+		/* Start Driving force */
+		// Calculate distance between centers
+		Vector2D vectorToTarget = particle.getVectorToTarget();
+
+		Vector2D FnDriving = ((vectorToTarget.subtract(particle.getVelocity()))).scalarMultiply(particle.getMass() / τ); // TODO revisar qué es tau!
+		F = F.add(FnDriving);
+		/* End Driving force */
 
 		// Particle knows its force at THIS frame
 		particle.setForce(F);
 
 		// Set particle's normal force for pressure calculation later on
-		particle.setNormalForce(atomicNormalForce.get());
+//		particle.setNormalForce(atomicNormalForce.get());
 	}
 
 	private static void moveParticle(Particle particle, double dt) {

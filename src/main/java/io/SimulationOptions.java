@@ -30,7 +30,7 @@ public class SimulationOptions extends OptionsBase {
 			abbrev = 'n',
 			help = "Number of pedestrians.",
 			category = "startup",
-			defaultValue = "200"
+			defaultValue = "10"
 	)
 	public int N;
 
