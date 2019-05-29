@@ -63,8 +63,6 @@ public class SocialForceModel {
 		// Print to buffer
 		printFirstFrame(buffer, energyBuffer, particles);
 
-		Criteria timeCriteria = new TimeCriteria(limitTime); // TODO hacer un criteria de cuantos quedan en la box
-
 		// Print frame
 		int currentFrame = 1;
 		int printFrame = (int) Math.ceil(printDeltaT / dt);
