@@ -1,9 +1,6 @@
 package algorithms.neighbours;
 
-import models.Criteria;
 import models.Particle;
-import models.ParticleGenerator;
-import models.TimeCriteria;
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
 import java.io.BufferedWriter;
@@ -32,7 +29,6 @@ public class SocialForceModel {
 	public static void run(
 			List<Particle> particles,
 			BufferedWriter buffer,
-			BufferedWriter energyBuffer,
 			BufferedWriter flowFileBuffer,
 			double limitTime,
 			double dt,
@@ -41,7 +37,11 @@ public class SocialForceModel {
 			double width,
 			double diameter,
 			double kN,
-			double kT) throws IOException {
+			double kT,
+			double desiredSpeed,
+			double A,
+			double B,
+			double τ) throws IOException {
 
 		boxHeight = length;
 		boxWidth = width;
@@ -61,7 +61,7 @@ public class SocialForceModel {
 //		particles = test2particles;
 
 		// Print to buffer
-		printFirstFrame(buffer, energyBuffer, particles);
+		printFirstFrame(buffer, particles);
 
 		// Print frame
 		int currentFrame = 1;
@@ -105,12 +105,12 @@ public class SocialForceModel {
 				// Update position
 				particles.stream().parallel().forEach(p -> {
 					moveParticle(p, dt);
-					if(p.getPosition().getY()>boxHeight/10) isDone.set(false);
+					if (p.getPosition().getY() > boxHeight / 10) isDone.set(false);
 				});
 			}
 
 			// Delete particles that arrive to Y=0
-			particles.removeIf(particle -> particle.getPosition().getY()<=0);
+			particles.removeIf(particle -> particle.getPosition().getY() <= 0);
 
 			// Remove Neighbours
 			particles.stream().parallel().forEach(particle -> particle.clearNeighbours());
@@ -284,7 +284,7 @@ public class SocialForceModel {
 		}
 	}
 
-	private static void printFirstFrame(BufferedWriter buff, BufferedWriter energyBuffer, List<Particle> particles) throws IOException {
+	private static void printFirstFrame(BufferedWriter buff, List<Particle> particles) throws IOException {
 		buff.write(String.valueOf(particles.size()));
 		buff.newLine();
 		buff.write("0");
@@ -298,10 +298,6 @@ public class SocialForceModel {
 				e1.printStackTrace();
 			}
 		});
-
-		// Write N to energy file
-		energyBuffer.write(String.valueOf(particles.size()));
-		energyBuffer.newLine();
 	}
 
 	private static String particleToString(Particle p) {
