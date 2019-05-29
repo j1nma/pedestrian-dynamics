@@ -82,7 +82,7 @@ public class GravitationalGranularSilo {
 			particles.stream().parallel().forEach(p -> {
 				Set<Particle> neighboursCustom = new HashSet<>(p.getNeighbours());
 				neighboursCustom = filterNeighbors(p, neighboursCustom);
-				addFakeWallParticles(p, neighboursCustom); // TODO revisar pero en principio queda igual a TP5. una particula falsa ojo solo usar para la fuerza granular no las otras dos
+				addFakeWallParticles(p, neighboursCustom);
 				calculateForce(p, neighboursCustom, kN, kT);
 			});
 
