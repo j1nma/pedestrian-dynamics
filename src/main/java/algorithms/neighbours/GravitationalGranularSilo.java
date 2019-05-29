@@ -106,31 +106,14 @@ public class GravitationalGranularSilo {
 				particles.stream().parallel().forEach(p -> moveParticle(p, dt));
 			}
 
-			// Relocate particles that go outside box a distance of L/10 and clear neighbours
-			// TODO en vez de relocate, si la particula llega abajo, matarla
-			// OJO con el counter de particulas, acordarse que ovito espera la lista de particulas y de antemano cuantas son.
-			// si matamaos particulas habria q ver que numero total le estamos mandando, hardcodeado el numero original o particles.size
-			// en cada iteracion
-			final List<Particle> finalParticles = particles;
-			particles.stream().parallel().forEach(p -> {
-				if (p.getPosition().getY() <= 0) {
+			// Delete particles that arrive to Y=0
+			particles.removeIf(particle -> particle.getPosition().getY()<=0);
 
-					// Write time for flow
-					try {
-						flowFileBuffer.write(String.valueOf(time));
-						flowFileBuffer.newLine();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-
-					relocateParticle(p, finalParticles);
-				}
-				p.clearNeighbours();
-			});
+			// Remove Neighbours
+			particles.stream().parallel().forEach(particle -> particle.clearNeighbours());
 
 
 			// TODO imprimir posicion para ubicar, velocidad para la flechita en la simu,
-			// TODO cualquier otro dato ir hablarlo
 			if ((currentFrame % printFrame) == 0) {
 				buffer.write(String.valueOf(particles.size()));
 				buffer.newLine();
