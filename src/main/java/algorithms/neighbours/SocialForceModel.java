@@ -68,8 +68,10 @@ public class SocialForceModel {
 		// Print frame
 		int currentFrame = 1;
 		int printFrame = (int) Math.ceil(printDeltaT / dt);
+		AtomicReference<Boolean> isDone = new AtomicReference<>(false);
 
-		while (!timeCriteria.isDone(particles, time)) {
+		while (!isDone.get()) {
+			isDone.set(true);
 			time += dt;
 
 			// Calculate neighbours
@@ -103,7 +105,10 @@ public class SocialForceModel {
 				});
 			} else {
 				// Update position
-				particles.stream().parallel().forEach(p -> moveParticle(p, dt));
+				particles.stream().parallel().forEach(p -> {
+					moveParticle(p, dt);
+					if(p.getPosition().getY()>boxHeight/10) isDone.set(false);
+				});
 			}
 
 			// Delete particles that arrive to Y=0
@@ -138,35 +143,6 @@ public class SocialForceModel {
 		System.out.println("Max pressure: " + currentMaxPressure);
 	}
 
-	@SuppressWarnings({"StatementWithEmptyBody", "SuspiciousNameCombination"})
-	private static void relocateParticle(Particle particle, List<Particle> particles) {
-
-		int maxTries = 1000;
-		int tries = 0;
-
-		// Save previous radius since call to setNewRandomPosition changes it
-		double previousRadius = particle.getRadius();
-
-		while ((tries++ < maxTries) && !ParticleGenerator.setNewRandomPosition(particles,
-				particle,
-				new Vector2D(0.0, boxWidth),
-				new Vector2D(boxHeight * 0.5, boxHeight * 1.1),
-				particle.getRadius())) {
-		}
-
-		particle.setRadius(previousRadius);
-
-		if (tries == maxTries) {
-			Random r = new Random();
-			double x = r.nextDouble() * (boxWidth - 2 * particle.getRadius()) + particle.getRadius();
-			particle.setPosition(new Vector2D(x, boxHeight * 1.1));
-			particle.setVelocity(Vector2D.ZERO);
-		}
-
-		particleIntegrationMethods.put(particle,
-				new VerletWithNeighbours(particle.getPosition()));
-
-	}
 
 	private static Set<Particle> filterNeighbors(Particle particle, Set<Particle> neighbors) {
 		HashSet<Particle> set = new HashSet<>();
