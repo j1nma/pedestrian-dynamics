@@ -10,7 +10,7 @@ public class ParticleGenerator {
 
 	private static final double MAX_TRIES = 10000;
 
-	public List<Particle> generate(int numberOfParticles, double areaLength, double areaWidth, double minDiameter, double maxDiameter, double mass) {
+	public List<Particle> generate(int numberOfParticles, double areaLength, double areaWidth, double minDiameter, double maxDiameter, double mass, double desiredSpeed) {
 		List<Particle> particles = new LinkedList<>();
 
 		// Run until max number of tries is reached for a particle allocation at silo area
@@ -20,7 +20,7 @@ public class ParticleGenerator {
 			boolean validPosition = false;
 			int tries = 0;
 
-			Particle p = new Particle(i + 1, 0.0, mass);
+			Particle p = new Particle(i + 1, 0.0, mass, desiredSpeed);
 
 			while (!validPosition) {
 				tries++;
@@ -32,7 +32,7 @@ public class ParticleGenerator {
 				validPosition = setNewRandomPosition(particles,
 						p,
 						new Vector2D(0.0, areaWidth),
-						new Vector2D(areaLength / 10, areaLength * 1.1),
+						new Vector2D(areaLength / 10, areaLength * 1.1), //todo: clearly not / 10, probably much bigger offset
 						(minDiameter + (maxDiameter - minDiameter) * new Random().nextDouble()) / 2);
 			}
 			if (validPosition)

@@ -12,16 +12,18 @@ public class Particle implements Cloneable {
 	private double radius;
 	private double mass;
 	private double normalForce;
+	private double desiredSpeed;
 	private Vector2D position;
 	private Vector2D velocity;
 	private Vector2D force;
 	private Set<Particle> neighbours;
 
-	public Particle(int id, double radius, double mass) {
+	public Particle(int id, double radius, double mass, double desiredSpeed) {
 		this.id = id;
 		this.radius = radius;
 		this.mass = mass;
 		this.normalForce = 0.0;
+		this.desiredSpeed = desiredSpeed;
 		this.neighbours = new HashSet<>();
 	}
 

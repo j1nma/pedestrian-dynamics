@@ -16,13 +16,11 @@ public class App {
 
 	private static final String OUTPUT_DIRECTORY = "./output";
 	private static final String OVITO_FILE = OUTPUT_DIRECTORY + "/ovito_file";
-	private static final String ENERGY_FILE_NAME = OUTPUT_DIRECTORY + "/energy_file";
 	private static final String FLOW_FILE_NAME = OUTPUT_DIRECTORY + "/flow_file";
 
-	private static final int N = 200;
-	private static final double MIN_PARTICLE_DIAMETER = 0.02;
-	private static final double MAX_PARTICLE_DIAMETER = 0.03;
-	private static final double PARTICLE_MASS = 0.01;
+	private static final double MIN_PARTICLE_DIAMETER = 0.5;
+	private static final double MAX_PARTICLE_DIAMETER = 0.58;
+	private static final double PARTICLE_MASS = 80; //TODO: verificar con profes cómo es la masa
 
 	private static ParticleGenerator particleGenerator = new ParticleGenerator();
 
@@ -36,7 +34,8 @@ public class App {
 		parser.parseAndExitUponError(args);
 		SimulationOptions options = parser.getOptions(SimulationOptions.class);
 		assert options != null;
-		if (options.limitTime <= 0
+		if (options.N <= 0
+				|| options.limitTime <= 0
 				|| options.deltaT <= 0
 				|| options.printDeltaT <= 0
 				|| options.length <= 0
@@ -47,18 +46,13 @@ public class App {
 			printUsage(parser);
 		}
 
-		if (!(options.length > options.width && options.width > options.diameter)) {
-			System.out.println("L > W > D");
-			printUsage(parser);
-		}
-
 		if (!parser.containsExplicitOption("deltaT")) {
 			options.deltaT = 0.01 * Math.sqrt(PARTICLE_MASS / options.kN);
 			System.out.println("Delta t: " + options.deltaT);
 		}
 
 		runAlgorithm(
-				particleGenerator.generate(N, options.length, options.width, MIN_PARTICLE_DIAMETER, MAX_PARTICLE_DIAMETER, PARTICLE_MASS),
+				particleGenerator.generate(options.N, options.length, options.width, MIN_PARTICLE_DIAMETER, MAX_PARTICLE_DIAMETER, PARTICLE_MASS, options.desiredSpeed),
 				options.limitTime,
 				options.deltaT,
 				options.printDeltaT,
@@ -66,7 +60,11 @@ public class App {
 				options.width,
 				options.diameter,
 				options.kN,
-				options.kT
+				options.kT,
+				options.desiredSpeed,
+				options.A,
+				options.B,
+				options.τ
 		);
 	}
 
@@ -78,28 +76,21 @@ public class App {
 	                                 double width,
 	                                 double diameter,
 	                                 double kN,
-	                                 double kT) throws IOException {
+	                                 double kT,
+	                                 double desiredSpeed,
+	                                 double A,
+	                                 double B,
+	                                 double τ) throws IOException {
 
-		FileWriter fw = new FileWriter(String.valueOf(Paths.get(OVITO_FILE + "_D=" + diameter + ".txt")));
+		FileWriter fw = new FileWriter(String.valueOf(Paths.get(OVITO_FILE + "_DS=" + desiredSpeed + ".txt")));
 		BufferedWriter writeFileBuffer = new BufferedWriter(fw);
 
-		FileWriter fw2;
-		BufferedWriter energyFileBuffer;
-		if (diameter == 0.0) {
-			fw2 = new FileWriter(String.valueOf(Paths.get(ENERGY_FILE_NAME + "_D=0.0_kT=" + kT + ".txt")));
-			energyFileBuffer = new BufferedWriter(fw2);
-		} else {
-			fw2 = new FileWriter(String.valueOf(Paths.get(ENERGY_FILE_NAME + "_D=" + diameter + ".txt")));
-			energyFileBuffer = new BufferedWriter(fw2);
-		}
-
-		FileWriter fw3 = new FileWriter(String.valueOf(Paths.get(FLOW_FILE_NAME + "_D=" + diameter + ".txt")));
+		FileWriter fw3 = new FileWriter(String.valueOf(Paths.get(FLOW_FILE_NAME + "_DS=" + desiredSpeed + ".txt")));
 		BufferedWriter flowFileBuffer = new BufferedWriter(fw3);
 
 		GravitationalGranularSilo.run(
 				particles,
 				writeFileBuffer,
-				energyFileBuffer,
 				flowFileBuffer,
 				limitTime,
 				deltaT,
@@ -108,16 +99,18 @@ public class App {
 				width,
 				diameter,
 				kN,
-				kT
+				kT,
+				A,
+				B,
+				τ
 		);
 
 		writeFileBuffer.close();
-		energyFileBuffer.close();
 		flowFileBuffer.close();
 	}
 
 	private static void printUsage(OptionsParser parser) {
-		System.out.println("Usage: java -jar granular-materials-1.0-SNAPSHOT.jar OPTIONS");
+		System.out.println("Usage: java -jar pedestrian-dynamics-1.0-SNAPSHOT.jar OPTIONS");
 		System.out.println(parser.describeOptions(Collections.emptyMap(),
 				OptionsParser.HelpVerbosity.LONG));
 	}
