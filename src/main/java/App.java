@@ -46,7 +46,7 @@ public class App {
 			printUsage(parser);
 		}
 
-		if (!parser.containsExplicitOption("deltaT")) {
+		if (!parser.containsExplicitOption("deltaT")) { //todo: revisar porque esto el criteria del tp5
 			options.deltaT = 0.01 * Math.sqrt(PARTICLE_MASS / options.kN);
 			System.out.println("Delta t: " + options.deltaT);
 		}
