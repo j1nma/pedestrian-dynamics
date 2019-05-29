@@ -24,21 +24,23 @@ def render(painter, **args):
 	node = ovito.dataset.selected_node
 	positions = node.compute().particle_properties.position.array
 
+	L = 20
+
 	# lower right
-	xy1 = project_point([0.3, 0.1, 0], painter, args)
+	xy1 = project_point([L, L / 10, 0], painter, args)
 	# upper right
-	xy2 = project_point([0.3, 1.1, 0], painter, args)
+	xy2 = project_point([L, L * 1.1, 0], painter, args)
 	# lower left
-	xy3 = project_point([0.0, 0.1, 0], painter, args)
-	# upper right
-	xy4 = project_point([0.0, 1.1, 0], painter, args)
+	xy3 = project_point([0.0, L / 10, 0], painter, args)
+	# upper left
+	xy4 = project_point([0.0, L * 1.1, 0], painter, args)
 	
-	gapSize = 0.15
-	gapSides = (0.3-gapSize)/2
+	gapSize = 1.2
+	gapSides = (L-gapSize)/2
 	# gap left
-	xy5 = project_point([gapSides, 0.1, 0], painter, args)
+	xy5 = project_point([gapSides, L / 10, 0], painter, args)
 	# gap right
-	xy6 = project_point([gapSides+gapSize, 0.1, 0], painter, args)
+	xy6 = project_point([gapSides+gapSize, L / 10, 0], painter, args)
 	
 	# This demo code prints the current animation frame into the upper left corner of the viewport.
 	
