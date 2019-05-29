@@ -1,4 +1,4 @@
-import algorithms.neighbours.GravitationalGranularSilo;
+import algorithms.neighbours.SocialForceModel;
 import com.google.devtools.common.options.OptionsParser;
 import io.SimulationOptions;
 import models.Particle;
@@ -88,7 +88,7 @@ public class App {
 		FileWriter fw3 = new FileWriter(String.valueOf(Paths.get(FLOW_FILE_NAME + "_DS=" + desiredSpeed + ".txt")));
 		BufferedWriter flowFileBuffer = new BufferedWriter(fw3);
 
-		GravitationalGranularSilo.run(
+		SocialForceModel.run(
 				particles,
 				writeFileBuffer,
 				flowFileBuffer,

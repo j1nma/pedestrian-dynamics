@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class GravitationalGranularSilo {
+public class SocialForceModel {
 
 	private static double boxHeight = 1.5;
 	private static double boxWidth = 0.3;
@@ -63,13 +63,13 @@ public class GravitationalGranularSilo {
 		// Print to buffer
 		printFirstFrame(buffer, energyBuffer, particles);
 
-		Criteria timeCriteria = new TimeCriteria(limitTime); // TODO hacer un criteria de cuantos quedan en la box
-
 		// Print frame
 		int currentFrame = 1;
 		int printFrame = (int) Math.ceil(printDeltaT / dt);
+		AtomicReference<Boolean> isDone = new AtomicReference<>(false);
 
-		while (!timeCriteria.isDone(particles, time)) {
+		while (!isDone.get()) {
+			isDone.set(true);
 			time += dt;
 
 			// Calculate neighbours
@@ -103,43 +103,25 @@ public class GravitationalGranularSilo {
 				});
 			} else {
 				// Update position
-				particles.stream().parallel().forEach(p -> moveParticle(p, dt));
+				particles.stream().parallel().forEach(p -> {
+					moveParticle(p, dt);
+					if(p.getPosition().getY()>boxHeight/10) isDone.set(false);
+				});
 			}
 
-			// Relocate particles that go outside box a distance of L/10 and clear neighbours
-			// TODO en vez de relocate, si la particula llega abajo, matarla
-			// OJO con el counter de particulas, acordarse que ovito espera la lista de particulas y de antemano cuantas son.
-			// si matamaos particulas habria q ver que numero total le estamos mandando, hardcodeado el numero original o particles.size
-			// en cada iteracion
-			final List<Particle> finalParticles = particles;
-			particles.stream().parallel().forEach(p -> {
-				if (p.getPosition().getY() <= 0) {
+			// Delete particles that arrive to Y=0
+			particles.removeIf(particle -> particle.getPosition().getY()<=0);
 
-					// Write time for flow
-					try {
-						flowFileBuffer.write(String.valueOf(time));
-						flowFileBuffer.newLine();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-
-					relocateParticle(p, finalParticles);
-				}
-				p.clearNeighbours();
-			});
+			// Remove Neighbours
+			particles.stream().parallel().forEach(particle -> particle.clearNeighbours());
 
 
-			// TODO imprimir posicion para ubicar, velocidad para la flechita en la simu,
-			// TODO cualquier otro dato ir hablarlo
+			// print current frame if need to
 			if ((currentFrame % printFrame) == 0) {
 				buffer.write(String.valueOf(particles.size()));
 				buffer.newLine();
 				buffer.write(String.valueOf(currentFrame));
 				buffer.newLine();
-
-				AtomicReference<Double> totalKinetic = new AtomicReference<>(0.0);
-
-				AtomicReference<Integer> densityCounter = new AtomicReference<>(0);
 
 				particles.stream().parallel().forEach(p -> {
 					try {
@@ -148,25 +130,8 @@ public class GravitationalGranularSilo {
 						e1.printStackTrace();
 					}
 
-					totalKinetic.accumulateAndGet(p.getKineticEnergy(), (x, y) -> x + y);
-
-//					if (p.getPosition().getY() >= (boxHeight / 10)
-//							&& p.getPosition().getY() <= ((boxHeight / 10) + 0.35)
-//							&& p.getPosition().getX() >= (boxWidth / 2 - boxDiameter / 2)
-//							&& p.getPosition().getX() <= (boxWidth / 2 + boxDiameter / 2)) {
-//						densityCounter.accumulateAndGet(1, (x, y) -> x + y);
-//					}
-
-//					if (p.getPosition().getY() >= (boxHeight / 10)
-//							&& p.getPosition().getY() <= ((boxHeight / 10) + 0.35)) {
-//						densityCounter.accumulateAndGet(1, (x, y) -> x + y);
-//					}
 				});
 
-//				System.out.println("Density:" + densityCounter.get() / (boxWidth * 0.35));
-
-				energyBuffer.write(String.valueOf(time) + " " + String.valueOf(totalKinetic.get()));
-				energyBuffer.newLine();
 			}
 
 			System.out.println("Current progress: " + 100 * (time / limitTime));
@@ -176,35 +141,6 @@ public class GravitationalGranularSilo {
 		System.out.println("Max pressure: " + currentMaxPressure);
 	}
 
-	@SuppressWarnings({"StatementWithEmptyBody", "SuspiciousNameCombination"})
-	private static void relocateParticle(Particle particle, List<Particle> particles) {
-
-		int maxTries = 1000;
-		int tries = 0;
-
-		// Save previous radius since call to setNewRandomPosition changes it
-		double previousRadius = particle.getRadius();
-
-		while ((tries++ < maxTries) && !ParticleGenerator.setNewRandomPosition(particles,
-				particle,
-				new Vector2D(0.0, boxWidth),
-				new Vector2D(boxHeight * 0.5, boxHeight * 1.1),
-				particle.getRadius())) {
-		}
-
-		particle.setRadius(previousRadius);
-
-		if (tries == maxTries) {
-			Random r = new Random();
-			double x = r.nextDouble() * (boxWidth - 2 * particle.getRadius()) + particle.getRadius();
-			particle.setPosition(new Vector2D(x, boxHeight * 1.1));
-			particle.setVelocity(Vector2D.ZERO);
-		}
-
-		particleIntegrationMethods.put(particle,
-				new VerletWithNeighbours(particle.getPosition()));
-
-	}
 
 	private static Set<Particle> filterNeighbors(Particle particle, Set<Particle> neighbors) {
 		HashSet<Particle> set = new HashSet<>();
@@ -279,6 +215,7 @@ public class GravitationalGranularSilo {
 
 	/**
 	 * For the ones that make contact, add a fake particle to the set of neighbours.
+	 * TODO refactor codigo repetido y casos ifs q nunca entraria
 	 */
 	private static void addFakeWallParticles(Particle particle, Set<Particle> neighbours) {
 		int fakeId = -1;
@@ -373,7 +310,6 @@ public class GravitationalGranularSilo {
 				p.getPosition().getX() + " " +
 				p.getPosition().getY() + " " +
 				p.getVelocity().getX() + " " +
-				p.getVelocity().getY() + " " +
-				p.calculatePressure() + " \n";
+				p.getVelocity().getY() + " \n";
 	}
 }
