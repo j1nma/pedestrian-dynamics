@@ -111,17 +111,6 @@ public class Particle implements Cloneable {
 				+ Math.pow(position.getY() - particlePosition.getY(), 2));
 	}
 
-	/**
-	 * The distance between points contemplates border-to-border distance.
-	 * That is why the radii are subtracted.
-	 */
-	public double getDistanceBetweenBorders(Particle particle) {
-		Vector2D particlePosition = particle.getPosition();
-		return Math.sqrt(Math.pow(position.getX() - particlePosition.getX(), 2) +
-				Math.pow(position.getY() - particlePosition.getY(), 2))
-				- radius - particle.getRadius();
-	}
-
 	public void addNeighbour(Particle neighbour) {
 		this.neighbours.add(neighbour);
 	}
@@ -152,6 +141,10 @@ public class Particle implements Cloneable {
 
 	public Vector2D getDesiredTarget() {
 		return desiredTarget;
+	}
+
+	public void setDesiredTarget(Vector2D desiredTarget) {
+		this.desiredTarget = desiredTarget;
 	}
 
 	public Vector2D getVectorToTarget() {
