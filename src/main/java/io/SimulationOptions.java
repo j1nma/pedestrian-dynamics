@@ -30,7 +30,7 @@ public class SimulationOptions extends OptionsBase {
 			abbrev = 'n',
 			help = "Number of pedestrians.",
 			category = "startup",
-			defaultValue = "10"
+			defaultValue = "100"
 	)
 	public int N;
 
@@ -39,7 +39,7 @@ public class SimulationOptions extends OptionsBase {
 			abbrev = 't',
 			help = "Simulation delta time (s).",
 			category = "startup",
-			defaultValue = "0.00001"
+			defaultValue = "0.0001"
 	)
 	public double deltaT;
 
@@ -48,7 +48,7 @@ public class SimulationOptions extends OptionsBase {
 			abbrev = 'p',
 			help = "Simulation print delta time (s).",
 			category = "startup",
-			defaultValue = "0.5"
+			defaultValue = "0.001"
 	)
 	public double printDeltaT;
 
@@ -98,11 +98,11 @@ public class SimulationOptions extends OptionsBase {
 	public double kT;
 
 	@Option(
-			name = "speed",
+			name = "desiredSpeed",
 			abbrev = 's',
 			help = "Desired speed [0.8 - 6.0 m/s].",
 			category = "startup",
-			defaultValue = "2.6"
+			defaultValue = "5.0"
 	)
 	public double desiredSpeed;
 
