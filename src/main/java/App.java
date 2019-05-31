@@ -28,8 +28,12 @@ public class App {
 
 	public static void main(String[] args) throws IOException {
 
-		// Create output directories
-		new File(OUTPUT_DIRECTORY).mkdirs();
+		// Create output directory
+		boolean createdOutputDirectory = new File(OUTPUT_DIRECTORY).mkdirs();
+		if (!createdOutputDirectory) {
+			System.out.println("Could not creating output directory.");
+			System.exit(1);
+		}
 
 		// Parse command line options
 		OptionsParser parser = OptionsParser.newOptionsParser(SimulationOptions.class);
@@ -66,8 +70,7 @@ public class App {
 				options.desiredSpeed,
 				options.A,
 				options.B,
-				options.τ,
-				LENGTH_DIVIDED_BY
+				options.τ
 		);
 	}
 
@@ -82,8 +85,7 @@ public class App {
 	                                 double desiredSpeed,
 	                                 double A,
 	                                 double B,
-	                                 double τ,
-	                                 double lengthDividedBy) throws IOException {
+	                                 double τ) throws IOException {
 
 		FileWriter fw = new FileWriter(String.valueOf(Paths.get(OVITO_FILE + "_DS=" + desiredSpeed + ".txt")));
 		BufferedWriter writeFileBuffer = new BufferedWriter(fw);
@@ -106,7 +108,7 @@ public class App {
 				A,
 				B,
 				τ,
-				lengthDividedBy
+				App.LENGTH_DIVIDED_BY
 		);
 
 		writeFileBuffer.close();
