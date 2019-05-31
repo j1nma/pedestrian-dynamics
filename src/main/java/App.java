@@ -29,10 +29,13 @@ public class App {
 	public static void main(String[] args) throws IOException {
 
 		// Create output directory
-		boolean createdOutputDirectory = new File(OUTPUT_DIRECTORY).mkdirs();
-		if (!createdOutputDirectory) {
-			System.out.println("Could not creating output directory.");
-			System.exit(1);
+		File outputDirectory = new File(OUTPUT_DIRECTORY);
+		if (!outputDirectory.exists()) {
+			boolean createdOutputDirectory = outputDirectory.mkdirs();
+			if (!createdOutputDirectory) {
+				System.out.println("Could not creating output directory.");
+				System.exit(1);
+			}
 		}
 
 		// Parse command line options
