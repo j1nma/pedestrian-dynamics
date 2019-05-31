@@ -9,14 +9,6 @@ import com.google.devtools.common.options.OptionsBase;
 public class SimulationOptions extends OptionsBase {
 
 	@Option(
-			name = "help",
-			abbrev = 'h',
-			help = "Prints usage info.",
-			defaultValue = "false"
-	)
-	public boolean help;
-
-	@Option(
 			name = "numberOfPedestrians",
 			abbrev = 'n',
 			help = "Number of pedestrians.",
