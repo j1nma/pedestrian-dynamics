@@ -221,7 +221,6 @@ public class SocialForceModel {
 				sum = sum.add(new Vector2D(Fx, Fy));
 			}
 
-
 			// Do not use fake wall particles for social
 			if (p2.getId() > 0) {
 				/* Start Social force */
@@ -229,8 +228,6 @@ public class SocialForceModel {
 
 				double FxSocial = FnSocial * Enx;
 				double FySocial = FnSocial * Eny;
-
-//				atomicNormalForce.accumulateAndGet(FnSocial, (x, y) -> x + y);
 
 				sum = sum.add(new Vector2D(FxSocial, FySocial));
 				/* End Social force */
