@@ -23,7 +23,7 @@ public class Particle implements Cloneable {
 		this(id, radius, mass, 0.0);
 	}
 
-	public Particle(int id, double radius, double mass, double desiredSpeed) {
+	Particle(int id, double radius, double mass, double desiredSpeed) {
 		this.id = id;
 		this.radius = radius;
 		this.mass = mass;
@@ -151,10 +151,10 @@ public class Particle implements Cloneable {
 		double d = Math.sqrt(Math.pow(position.getX() - desiredTarget.getX(), 2)
 				+ Math.pow(position.getY() - desiredTarget.getY(), 2));
 
-		// Calculate x component of target unit vector etarget
+		// Calculate x component of target unit vector eTarget
 		double Etx = (desiredTarget.getX() - position.getX()) / d;
 
-		// Calculate y component of target unit vector etarget
+		// Calculate y component of target unit vector eTarget
 		double Ety = (desiredTarget.getY() - position.getY()) / d;
 
 		double x = desiredSpeed * Etx;
