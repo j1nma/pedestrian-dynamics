@@ -10,9 +10,9 @@ public class Particle implements Cloneable {
 
 	private final int id;
 	private double radius;
-	private double mass;
+	private final double mass;
 	private double normalForce;
-	private double desiredSpeed;
+	private final double desiredSpeed;
 	private Vector2D position;
 	private Vector2D velocity;
 	private Vector2D force;

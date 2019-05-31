@@ -24,7 +24,7 @@ public class App {
 
 	private static final double LENGTH_DIVIDED_BY = 2;
 
-	private static ParticleGenerator particleGenerator = new ParticleGenerator();
+	private static final ParticleGenerator particleGenerator = new ParticleGenerator();
 
 	public static void main(String[] args) throws IOException {
 

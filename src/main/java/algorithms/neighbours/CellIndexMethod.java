@@ -35,11 +35,7 @@ class CellIndexMethod {
 			int cellNumber = (int) (cellY * M + cellX);
 
 			// Add particle to that cell with cell position
-			try {
-				cells.get(cellNumber).add(new CellParticle(p, new Vector2D(cellX, cellY)));
-			} catch (IndexOutOfBoundsException e) {
-				int a = 0;
-			}
+			cells.get(cellNumber).add(new CellParticle(p, new Vector2D(cellX, cellY)));
 		}
 
 		for (List<CellParticle> cellParticles : cells) {
@@ -81,8 +77,8 @@ class CellIndexMethod {
 	}
 
 	private static class CellParticle {
-		Particle particle;
-		Vector2D cellPosition;
+		final Particle particle;
+		final Vector2D cellPosition;
 
 		CellParticle(Particle particle, Vector2D cellPosition) {
 			this.particle = particle;

@@ -2,7 +2,7 @@ package algorithms.neighbours;
 
 import models.Particle;
 
-public interface IntegrationMethodWithNeighbours {
+interface IntegrationMethodWithNeighbours {
 
 	void updatePosition(Particle particle, double dt);
 }
