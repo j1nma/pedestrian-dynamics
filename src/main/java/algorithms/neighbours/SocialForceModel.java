@@ -50,10 +50,10 @@ public class SocialForceModel {
 
 //		Particle p1 = particles.get(0);
 //		Particle p2 = particles.get(1);
-//		p1.setPosition(new Vector2D(2, 2.5));
+//		p1.setPosition(new Vector2D(0.25, 13));
 //		p1.setRadius(0.25);
 //		p2.setRadius(0.25);
-//		p2.setPosition(new Vector2D(11, 14));
+//		p2.setPosition(new Vector2D(0.25, 12));
 //		p1.setVelocity(new Vector2D(0, 0));
 //		p2.setVelocity(new Vector2D(0, 0));
 //		List<Particle> test2particles = new ArrayList<>();
@@ -74,6 +74,8 @@ public class SocialForceModel {
 		// Particles out of room but still moving
 		List<Particle> outOfRoom = new LinkedList<>();
 
+		long startTime = System.currentTimeMillis();
+
 		while (outOfRoom.size() < N) {
 			time += dt;
 
@@ -91,6 +93,8 @@ public class SocialForceModel {
 				calculateForce(p, neighboursCustom, kN, kT, A, B, τ);
 			});
 
+			List<Particle> toRemove = new LinkedList<>();
+
 			// Only at first frame, initialize previous position of Verlet with Euler
 			if (time == dt) {
 				particles.forEach(p -> {
@@ -102,36 +106,39 @@ public class SocialForceModel {
 
 					particleIntegrationMethods.put(p,
 							new VerletWithNeighbours(new Vector2D(posX, posY)));
+
+					// Remove Neighbours
+					p.clearNeighbours();
 				});
 			} else {
-				// Update position
-				particles.stream().parallel().forEach(p -> moveParticle(p, dt));
-			}
+				particles.stream().parallel().forEach(p -> {
 
-			// Relocate particles that go outside box a distance of L/10 and clear neighbours
-			List<Particle> toRemove = new LinkedList<>();
-			particles.stream().parallel().forEach(p -> {
-				if (p.getPosition().getY() < boxHeight / lengthDividedBy
-						&& !outOfRoom.contains(p)) {
+					// Update position
+					moveParticle(p, dt);
 
-					outOfRoom.add(p);
+					// Relocate particles that go outside box a distance of L/10 and clear neighbours
+					if (p.getPosition().getY() < boxHeight / lengthDividedBy
+							&& !outOfRoom.contains(p)) {
 
-					// Write time for flow
-					try {
-						flowFileBuffer.write(String.valueOf(time));
-						flowFileBuffer.newLine();
-					} catch (IOException e) {
-						e.printStackTrace();
+						outOfRoom.add(p);
+
+						// Write time for flow
+						try {
+							flowFileBuffer.write(String.valueOf(time));
+							flowFileBuffer.newLine();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
-				}
 
-				// Delete particles that arrive to Y = 0
-				if (p.getPosition().getY() <= 0)
-					toRemove.add(p);
+					// Delete particles that arrive to Y = 0
+					if (p.getPosition().getY() <= 0)
+						toRemove.add(p);
 
-				// Remove Neighbours
-				p.clearNeighbours();
-			});
+					// Remove Neighbours
+					p.clearNeighbours();
+				});
+			}
 
 			// Delete particles that arrive to Y = 0
 			particles.removeAll(toRemove);
@@ -143,6 +150,11 @@ public class SocialForceModel {
 			System.out.println("Particles Left: " + (N - outOfRoom.size()));
 			currentFrame++;
 		}
+		long stopTime = System.currentTimeMillis();
+		long elapsedTime = stopTime - startTime;
+		long minutes = (elapsedTime / 1000) / 60;
+		long seconds = (elapsedTime / 1000) % 60;
+		System.out.format("Execution time: %d minutes and %d seconds.", minutes, seconds);
 	}
 
 
@@ -160,9 +172,6 @@ public class SocialForceModel {
 	 * Calculate sum of forces
 	 */
 	private static void calculateForce(Particle particle, Set<Particle> neighbours, double kN, double kT, double A, double B, double τ) {
-
-		// todo esto hace la sumatoria de Fuerzas de Fgranular. lo que habria que hacer es hacer las Fsocial y la F deseo y luego sumarlas
-		//  o bien en una sola iteracion que es la de abajo en la sumatoria agregar tmb Fdeseo y Fsocial
 
 		// Particle normal force reset and accumulator
 		particle.resetNormalForce();
@@ -205,9 +214,8 @@ public class SocialForceModel {
 				sum = sum.add(new Vector2D(Fx, Fy));
 			}
 
-			// Do not use fake wall particles for social
+			// Social force: do not use fake wall particles for social force
 			if (p2.getId() > 0) {
-				/* Start Social force */
 				double FnSocial = -A * Math.exp((eps) / B);
 
 				double FxSocial = FnSocial * Enx;
@@ -220,7 +228,7 @@ public class SocialForceModel {
 			return sum;
 		}).reduce(F, Vector2D::add);
 
-		/* Start Driving force */
+		// Driving force
 		// Calculate distance between centers
 		double MARGIN = 0.1;
 		double targetX = particle.getPosition().getX();
@@ -233,11 +241,8 @@ public class SocialForceModel {
 			targetY = 0;
 		particle.setDesiredTarget(new Vector2D(targetX, targetY));
 
-		Vector2D vectorToTarget = particle.getVectorToTarget();
-
-		Vector2D FnDriving = ((vectorToTarget.subtract(particle.getVelocity()))).scalarMultiply(particle.getMass() / τ);
+		Vector2D FnDriving = ((particle.getVectorToTarget().subtract(particle.getVelocity()))).scalarMultiply(particle.getMass() / τ);
 		F = F.add(FnDriving);
-		/* End Driving force */
 
 		// Particle knows its force at THIS frame
 		particle.setForce(F);
