@@ -13,7 +13,7 @@ function maxPressure(desiredSpeed)
         str2num(fgetl(fid));
         imax = max(dlmread(fid, ' ', sprintf("G1..G%d", N)));
         if(imax > fmax)
-            fmax = imax
+            fmax = imax;
         endif
     endwhile
     fclose(fid);

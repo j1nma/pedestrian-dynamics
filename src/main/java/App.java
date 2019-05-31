@@ -20,7 +20,9 @@ public class App {
 
 	private static final double MIN_PARTICLE_DIAMETER = 0.5;
 	private static final double MAX_PARTICLE_DIAMETER = 0.58;
-	private static final double PARTICLE_MASS = 80; //TODO: verificar con profes cómo es la masa
+	private static final double PARTICLE_MASS = 80;
+
+	private static final double LENGTH_DIVIDED_BY = 2;
 
 	private static ParticleGenerator particleGenerator = new ParticleGenerator();
 
@@ -35,7 +37,6 @@ public class App {
 		SimulationOptions options = parser.getOptions(SimulationOptions.class);
 		assert options != null;
 		if (options.N <= 0
-				|| options.limitTime <= 0
 				|| options.deltaT <= 0
 				|| options.printDeltaT <= 0
 				|| options.length <= 0
@@ -46,14 +47,15 @@ public class App {
 			printUsage(parser);
 		}
 
-		if (!parser.containsExplicitOption("deltaT")) { //todo: revisar porque esto el criteria del tp5
+		if (!parser.containsExplicitOption("deltaT")) {
 			options.deltaT = 0.01 * Math.sqrt(PARTICLE_MASS / options.kN);
 			System.out.println("Delta t: " + options.deltaT);
 		}
 
 		runAlgorithm(
-				particleGenerator.generate(options.N, options.length, options.width, MIN_PARTICLE_DIAMETER, MAX_PARTICLE_DIAMETER, PARTICLE_MASS, options.desiredSpeed),
-				options.limitTime,
+				particleGenerator.generate(options.N, options.length, options.width,
+						MIN_PARTICLE_DIAMETER, MAX_PARTICLE_DIAMETER, PARTICLE_MASS,
+						options.desiredSpeed, LENGTH_DIVIDED_BY),
 				options.deltaT,
 				options.printDeltaT,
 				options.length,
@@ -64,12 +66,12 @@ public class App {
 				options.desiredSpeed,
 				options.A,
 				options.B,
-				options.τ
+				options.τ,
+				LENGTH_DIVIDED_BY
 		);
 	}
 
 	private static void runAlgorithm(List<Particle> particles,
-	                                 double limitTime,
 	                                 double deltaT,
 	                                 double printDeltaT,
 	                                 double length,
@@ -80,7 +82,8 @@ public class App {
 	                                 double desiredSpeed,
 	                                 double A,
 	                                 double B,
-	                                 double τ) throws IOException {
+	                                 double τ,
+	                                 double lengthDividedBy) throws IOException {
 
 		FileWriter fw = new FileWriter(String.valueOf(Paths.get(OVITO_FILE + "_DS=" + desiredSpeed + ".txt")));
 		BufferedWriter writeFileBuffer = new BufferedWriter(fw);
@@ -92,7 +95,6 @@ public class App {
 				particles,
 				writeFileBuffer,
 				flowFileBuffer,
-				limitTime,
 				deltaT,
 				printDeltaT,
 				length,
@@ -103,7 +105,8 @@ public class App {
 				desiredSpeed,
 				A,
 				B,
-				τ
+				τ,
+				lengthDividedBy
 		);
 
 		writeFileBuffer.close();

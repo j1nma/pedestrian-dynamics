@@ -10,7 +10,14 @@ public class ParticleGenerator {
 
 	private static final double MAX_TRIES = 10000;
 
-	public List<Particle> generate(int numberOfParticles, double areaLength, double areaWidth, double minDiameter, double maxDiameter, double mass, double desiredSpeed) {
+	public List<Particle> generate(int numberOfParticles,
+	                               double areaLength,
+	                               double areaWidth,
+	                               double minDiameter,
+	                               double maxDiameter,
+	                               double mass,
+	                               double desiredSpeed,
+	                               double lengthDividedBy) {
 		List<Particle> particles = new LinkedList<>();
 
 		// Run until max number of tries is reached for a particle allocation at silo area
@@ -32,7 +39,7 @@ public class ParticleGenerator {
 				validPosition = setNewRandomPosition(particles,
 						p,
 						new Vector2D(0.0, areaWidth),
-						new Vector2D(areaLength / 2, areaLength * 1.5), //todo: clearly not / 10, probably much bigger offset
+						new Vector2D(areaLength / lengthDividedBy, areaLength * (1 + 1 / lengthDividedBy)),
 						(minDiameter + (maxDiameter - minDiameter) * new Random().nextDouble()) / 2);
 			}
 			if (validPosition)
@@ -43,19 +50,13 @@ public class ParticleGenerator {
 	}
 
 	/**
-	 * Assign new random position to particle at empty space between xRange and yRange
-	 *
-	 * @param particles
-	 * @param particle
-	 * @param xRange
-	 * @param yRange
-	 * @return true if successful
+	 * Assign new random position to particle at empty space between xRange and yRange.
 	 */
-	public static boolean setNewRandomPosition(List<Particle> particles,
-	                                           Particle particle,
-	                                           Vector2D xRange,
-	                                           Vector2D yRange,
-	                                           double radius) {
+	private static boolean setNewRandomPosition(List<Particle> particles,
+	                                            Particle particle,
+	                                            Vector2D xRange,
+	                                            Vector2D yRange,
+	                                            double radius) {
 		Random r = new Random();
 		double x, y;
 

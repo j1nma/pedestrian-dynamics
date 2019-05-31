@@ -18,6 +18,8 @@ public class SocialForceModel {
 	private static final double MAX_DIAMETER = 0.58;
 	private static final double MAX_INTERACTION_RADIUS = MAX_DIAMETER / 2;
 
+	private static double lengthDividedBy = 2;
+
 	// Initial State
 	private static double time = 0.0;
 
@@ -28,7 +30,6 @@ public class SocialForceModel {
 			List<Particle> particles,
 			BufferedWriter buffer,
 			BufferedWriter flowFileBuffer,
-			double limitTime,
 			double dt,
 			double printDeltaT,
 			double length,
@@ -39,12 +40,13 @@ public class SocialForceModel {
 			double desiredSpeed,
 			double A,
 			double B,
-			double τ) throws IOException {
+			double τ,
+			double LDividedBy) throws IOException {
 
 		boxHeight = length;
 		boxWidth = width;
-//		boxDiameter = 0.0;
 		boxDiameter = diameter;
+		lengthDividedBy = LDividedBy;
 
 //		Particle p1 = particles.get(0);
 //		Particle p2 = particles.get(1);
@@ -59,14 +61,12 @@ public class SocialForceModel {
 //		test2particles.add(p2);
 //		particles = test2particles;
 
-		// Print to buffer
-		printFirstFrame(buffer, particles);
+		// Write first frame to buffer
+		printFrame(buffer, particles);
 
 		// Print frame
 		int currentFrame = 1;
-		int printFrame = 60;
-		// todo: 1/60
-//		int printFrame = (int) Math.ceil(printDeltaT / dt);
+		int printFrame = (int) Math.ceil(printDeltaT / dt);
 
 		// Save N for 'Particles Left;
 		int N = particles.size();
@@ -79,8 +79,8 @@ public class SocialForceModel {
 
 			// Calculate neighbours
 			CellIndexMethod.run(particles,
-					(boxHeight * 1.5),
-					(int) Math.floor((boxHeight * 1.5) / (2 * MAX_INTERACTION_RADIUS))
+					(boxHeight * (1 + 1 / lengthDividedBy)),
+					(int) Math.floor((boxHeight * (1 + 1 / lengthDividedBy)) / (2 * MAX_INTERACTION_RADIUS))
 			);
 
 			// Calculate sum of forces, including fake wall particles
@@ -111,7 +111,7 @@ public class SocialForceModel {
 			// Relocate particles that go outside box a distance of L/10 and clear neighbours
 			List<Particle> toRemove = new LinkedList<>();
 			particles.stream().parallel().forEach(p -> {
-				if (p.getPosition().getY() < boxHeight / 2
+				if (p.getPosition().getY() < boxHeight / lengthDividedBy
 						&& !outOfRoom.contains(p)) {
 
 					outOfRoom.add(p);
@@ -137,24 +137,8 @@ public class SocialForceModel {
 			particles.removeAll(toRemove);
 
 			// Print current frame
-			if ((currentFrame % printFrame) == 0) {
-				buffer.write(String.valueOf(particles.size()));
-				buffer.newLine();
-				buffer.write("t=");
-				buffer.write(String.valueOf(new DecimalFormat("#.###").format(time)));
-				buffer.write("s");
-				buffer.newLine();
-
-				particles.stream().parallel().forEach(p -> {
-					try {
-						buffer.write(particleToString(p));
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-
-				});
-
-			}
+			if ((currentFrame % printFrame) == 0)
+				printFrame(buffer, particles);
 
 			System.out.println("Particles Left: " + (N - outOfRoom.size()));
 			currentFrame++;
@@ -244,14 +228,14 @@ public class SocialForceModel {
 			targetX = boxWidth / 2 - boxDiameter / 2 + particle.getRadius() + MARGIN;
 		if (particle.getPosition().getX() + particle.getRadius() >= boxWidth / 2 + boxDiameter / 2 - MARGIN)
 			targetX = boxWidth / 2 + boxDiameter / 2 - particle.getRadius() - MARGIN;
-		double targetY = boxHeight / 2;
+		double targetY = boxHeight / lengthDividedBy;
 		if (particle.getPosition().getY() < targetY)
 			targetY = 0;
 		particle.setDesiredTarget(new Vector2D(targetX, targetY));
 
 		Vector2D vectorToTarget = particle.getVectorToTarget();
 
-		Vector2D FnDriving = ((vectorToTarget.subtract(particle.getVelocity()))).scalarMultiply(particle.getMass() / τ); // TODO revisar qué es tau!
+		Vector2D FnDriving = ((vectorToTarget.subtract(particle.getVelocity()))).scalarMultiply(particle.getMass() / τ);
 		F = F.add(FnDriving);
 		/* End Driving force */
 
@@ -292,13 +276,12 @@ public class SocialForceModel {
 		double diameterStart = (boxWidth / 2 - boxDiameter / 2);
 		boolean outsideGap = particle.getPosition().getX() < diameterStart || particle.getPosition().getX() > (diameterStart + boxDiameter);
 
-		double bottomWall = boxHeight / 2;
-		double upperWall = boxHeight * 1.5;
+		double bottomWall = boxHeight / lengthDividedBy;
+		double upperWall = boxHeight * (1 + 1 / lengthDividedBy);
 
 		// Analyse bottom wall
 		if (particle.getPosition().getY() >= bottomWall
 				&& particle.getPosition().getY() - particle.getRadius() <= bottomWall) {
-//				&& particle.getVelocity().getY() < 0) {
 			if (outsideGap) {
 				Particle bottomWallParticle = new Particle(fakeId--, particle.getRadius(), particle.getMass());
 				bottomWallParticle.setPosition(new Vector2D(particle.getPosition().getX(), bottomWall - particle.getRadius()));
@@ -308,7 +291,7 @@ public class SocialForceModel {
 				if (boxDiameter > 0.0) {
 					if (particle.getPosition().getX() - particle.getRadius() <= diameterStart
 							&& particle.getPosition().distance(new Vector2D(diameterStart, bottomWall)) < particle.getRadius()) {
-						Particle leftDiameterStartParticle = new Particle(fakeId--, 0.0, 0.0); //todo: re ask about mass
+						Particle leftDiameterStartParticle = new Particle(fakeId--, 0.0, 0.0);
 						leftDiameterStartParticle.setPosition(new Vector2D(diameterStart, bottomWall));
 						leftDiameterStartParticle.setVelocity(Vector2D.ZERO);
 						neighbours.add(leftDiameterStartParticle);
@@ -338,7 +321,7 @@ public class SocialForceModel {
 		}
 	}
 
-	private static void printFirstFrame(BufferedWriter buffer, List<Particle> particles) throws IOException {
+	private static void printFrame(BufferedWriter buffer, List<Particle> particles) throws IOException {
 		buffer.write(String.valueOf(particles.size()));
 		buffer.newLine();
 		buffer.write("t=");
@@ -346,10 +329,9 @@ public class SocialForceModel {
 		buffer.write("s");
 		buffer.newLine();
 
-		// Print remaining particles
-		particles.forEach(particle -> {
+		particles.stream().parallel().forEach(p -> {
 			try {
-				buffer.write(particleToString(particle));
+				buffer.write(particleToString(p));
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}

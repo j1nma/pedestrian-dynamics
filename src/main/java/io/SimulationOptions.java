@@ -17,15 +17,6 @@ public class SimulationOptions extends OptionsBase {
 	public boolean help;
 
 	@Option(
-			name = "limitTime",
-			abbrev = 'm',
-			help = "Maximum time of simulation (s).",
-			category = "startup",
-			defaultValue = "5.0"
-	)
-	public double limitTime;
-
-	@Option(
 			name = "numberOfPedestrians",
 			abbrev = 'n',
 			help = "Number of pedestrians.",
@@ -48,7 +39,7 @@ public class SimulationOptions extends OptionsBase {
 			abbrev = 'p',
 			help = "Simulation print delta time (s).",
 			category = "startup",
-			defaultValue = "0.001"
+			defaultValue = "0.016666667" // for 60 FPS
 	)
 	public double printDeltaT;
 
