@@ -5,6 +5,7 @@ import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -63,17 +64,23 @@ public class SocialForceModel {
 
 		// Print frame
 		int currentFrame = 1;
-		int printFrame = (int) Math.ceil(printDeltaT / dt);
-		AtomicReference<Integer> leftInBox = new AtomicReference<>(1);
+		int printFrame = 60;
+		// todo: 1/60
+//		int printFrame = (int) Math.ceil(printDeltaT / dt);
 
-		while (leftInBox.get() != 0) {
-			leftInBox.set(0);
+		// Save N for 'Particles Left;
+		int N = particles.size();
+
+		// Particles out of room but still moving
+		List<Particle> outOfRoom = new LinkedList<>();
+
+		while (outOfRoom.size() < N) {
 			time += dt;
 
 			// Calculate neighbours
 			CellIndexMethod.run(particles,
-					(boxHeight * 1.1),
-					(int) Math.floor((boxHeight * 1.1) / (2 * MAX_INTERACTION_RADIUS))
+					(boxHeight * 1.5),
+					(int) Math.floor((boxHeight * 1.5) / (2 * MAX_INTERACTION_RADIUS))
 			);
 
 			// Calculate sum of forces, including fake wall particles
@@ -84,45 +91,58 @@ public class SocialForceModel {
 				calculateForce(p, neighboursCustom, kN, kT, A, B, τ);
 			});
 
-
 			// Only at first frame, initialize previous position of Verlet with Euler
 			if (time == dt) {
 				particles.forEach(p -> {
-					if (time == dt) {
-						Vector2D currentForce = p.getForce();
-						double posX = p.getPosition().getX() - dt * p.getVelocity().getX();
-						double posY = p.getPosition().getY() - dt * p.getVelocity().getY();
-						posX += Math.pow(dt, 2) * currentForce.getX() / (2 * p.getMass());
-						posY += Math.pow(dt, 2) * currentForce.getY() / (2 * p.getMass());
+					Vector2D currentForce = p.getForce();
+					double posX = p.getPosition().getX() - dt * p.getVelocity().getX();
+					double posY = p.getPosition().getY() - dt * p.getVelocity().getY();
+					posX += Math.pow(dt, 2) * currentForce.getX() / (2 * p.getMass());
+					posY += Math.pow(dt, 2) * currentForce.getY() / (2 * p.getMass());
 
-						particleIntegrationMethods.put(p,
-								new VerletWithNeighbours(new Vector2D(posX, posY)));
-					}
+					particleIntegrationMethods.put(p,
+							new VerletWithNeighbours(new Vector2D(posX, posY)));
 				});
-				leftInBox.set(particles.size());
 			} else {
 				// Update position
-				particles.stream().parallel().forEach(p -> {
-					moveParticle(p, dt);
-					if (p.getPosition().getY() > boxHeight / 10
-							&& p.getPosition().getY() <= boxHeight * 1.1
-							&& p.getPosition().getX() > 0
-							&& p.getPosition().getX() <= boxWidth)
-						leftInBox.accumulateAndGet(1, (x, y) -> x + y);
-				});
+				particles.stream().parallel().forEach(p -> moveParticle(p, dt));
 			}
 
-			// Delete particles that arrive to Y=0
-			particles.removeIf(particle -> particle.getPosition().getY() <= 0);
+			// Relocate particles that go outside box a distance of L/10 and clear neighbours
+			List<Particle> toRemove = new LinkedList<>();
+			particles.stream().parallel().forEach(p -> {
+				if (p.getPosition().getY() < boxHeight / 2
+						&& !outOfRoom.contains(p)) {
 
-			// Remove Neighbours
-			particles.forEach(Particle::clearNeighbours);
+					outOfRoom.add(p);
 
-			// print current frame if need to
+					// Write time for flow
+					try {
+						flowFileBuffer.write(String.valueOf(time));
+						flowFileBuffer.newLine();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+
+				// Delete particles that arrive to Y = 0
+				if (p.getPosition().getY() <= 0)
+					toRemove.add(p);
+
+				// Remove Neighbours
+				p.clearNeighbours();
+			});
+
+			// Delete particles that arrive to Y = 0
+			particles.removeAll(toRemove);
+
+			// Print current frame
 			if ((currentFrame % printFrame) == 0) {
 				buffer.write(String.valueOf(particles.size()));
 				buffer.newLine();
-				buffer.write(String.valueOf(currentFrame));
+				buffer.write("t=");
+				buffer.write(String.valueOf(new DecimalFormat("#.###").format(time)));
+				buffer.write("s");
 				buffer.newLine();
 
 				particles.stream().parallel().forEach(p -> {
@@ -136,7 +156,7 @@ public class SocialForceModel {
 
 			}
 
-			System.out.println("Particles Left: " + leftInBox.get());
+			System.out.println("Particles Left: " + (N - outOfRoom.size()));
 			currentFrame++;
 		}
 	}
@@ -159,6 +179,10 @@ public class SocialForceModel {
 
 		// todo esto hace la sumatoria de Fuerzas de Fgranular. lo que habria que hacer es hacer las Fsocial y la F deseo y luego sumarlas
 		//  o bien en una sola iteracion que es la de abajo en la sumatoria agregar tmb Fdeseo y Fsocial
+
+		// Particle normal force reset and accumulator
+		particle.resetNormalForce();
+		AtomicReference<Double> atomicNormalForce = new AtomicReference<>(0.0);
 
 		// Particle force calculation
 		Vector2D F = new Vector2D(0, 0);
@@ -192,6 +216,8 @@ public class SocialForceModel {
 				double Fx = Fn * Enx + Ft * (-Eny);
 				double Fy = Fn * Eny + Ft * Enx;
 
+				atomicNormalForce.accumulateAndGet(Fn, (x, y) -> x + y);
+
 				sum = sum.add(new Vector2D(Fx, Fy));
 			}
 
@@ -204,6 +230,8 @@ public class SocialForceModel {
 				double FxSocial = FnSocial * Enx;
 				double FySocial = FnSocial * Eny;
 
+//				atomicNormalForce.accumulateAndGet(FnSocial, (x, y) -> x + y);
+
 				sum = sum.add(new Vector2D(FxSocial, FySocial));
 				/* End Social force */
 			}
@@ -213,13 +241,13 @@ public class SocialForceModel {
 
 		/* Start Driving force */
 		// Calculate distance between centers
-		double MARGIN = 0.0;
+		double MARGIN = 0.1;
 		double targetX = particle.getPosition().getX();
 		if (particle.getPosition().getX() - particle.getRadius() <= boxWidth / 2 - boxDiameter / 2 + MARGIN)
 			targetX = boxWidth / 2 - boxDiameter / 2 + particle.getRadius() + MARGIN;
 		if (particle.getPosition().getX() + particle.getRadius() >= boxWidth / 2 + boxDiameter / 2 - MARGIN)
 			targetX = boxWidth / 2 + boxDiameter / 2 - particle.getRadius() - MARGIN;
-		double targetY = boxHeight / 10;
+		double targetY = boxHeight / 2;
 		if (particle.getPosition().getY() < targetY)
 			targetY = 0;
 		particle.setDesiredTarget(new Vector2D(targetX, targetY));
@@ -234,7 +262,7 @@ public class SocialForceModel {
 		particle.setForce(F);
 
 		// Set particle's normal force for pressure calculation later on
-//		particle.setNormalForce(atomicNormalForce.get());
+		particle.setNormalForce(atomicNormalForce.get());
 	}
 
 	private static void moveParticle(Particle particle, double dt) {
@@ -267,8 +295,8 @@ public class SocialForceModel {
 		double diameterStart = (boxWidth / 2 - boxDiameter / 2);
 		boolean outsideGap = particle.getPosition().getX() < diameterStart || particle.getPosition().getX() > (diameterStart + boxDiameter);
 
-		double bottomWall = boxHeight / 10;
-		double upperWall = boxHeight * 1.1;
+		double bottomWall = boxHeight / 2;
+		double upperWall = boxHeight * 1.5;
 
 		// Analyse bottom wall
 		if (particle.getPosition().getY() >= bottomWall
@@ -313,16 +341,18 @@ public class SocialForceModel {
 		}
 	}
 
-	private static void printFirstFrame(BufferedWriter buff, List<Particle> particles) throws IOException {
-		buff.write(String.valueOf(particles.size()));
-		buff.newLine();
-		buff.write("0");
-		buff.newLine();
+	private static void printFirstFrame(BufferedWriter buffer, List<Particle> particles) throws IOException {
+		buffer.write(String.valueOf(particles.size()));
+		buffer.newLine();
+		buffer.write("t=");
+		buffer.write(String.valueOf(new DecimalFormat("#.###").format(time)));
+		buffer.write("s");
+		buffer.newLine();
 
 		// Print remaining particles
 		particles.forEach(particle -> {
 			try {
-				buff.write(particleToString(particle));
+				buffer.write(particleToString(particle));
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
@@ -335,6 +365,7 @@ public class SocialForceModel {
 				p.getPosition().getX() + " " +
 				p.getPosition().getY() + " " +
 				p.getVelocity().getX() + " " +
-				p.getVelocity().getY() + " \n";
+				p.getVelocity().getY() + " " +
+				p.calculatePressure() + " \n";
 	}
 }
