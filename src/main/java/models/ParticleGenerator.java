@@ -32,7 +32,7 @@ public class ParticleGenerator {
 				validPosition = setNewRandomPosition(particles,
 						p,
 						new Vector2D(0.0, areaWidth),
-						new Vector2D(areaLength / 10, areaLength * 1.1), //todo: clearly not / 10, probably much bigger offset
+						new Vector2D(areaLength / 2, areaLength * 1.5), //todo: clearly not / 10, probably much bigger offset
 						(minDiameter + (maxDiameter - minDiameter) * new Random().nextDouble()) / 2);
 			}
 			if (validPosition)
