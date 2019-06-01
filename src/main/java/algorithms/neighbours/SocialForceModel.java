@@ -37,7 +37,6 @@ public class SocialForceModel {
 			double diameter,
 			double kN,
 			double kT,
-			double desiredSpeed,
 			double A,
 			double B,
 			double τ,

@@ -111,7 +111,6 @@ public class App {
 				diameter,
 				kN,
 				kT,
-				desiredSpeed,
 				A,
 				B,
 				τ,
