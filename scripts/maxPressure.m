@@ -1,5 +1,5 @@
-function maxPressure(desiredSpeed)
-    fid = fopen(sprintf("./output/ovito_file_DS=%.1f.txt", desiredSpeed));
+function maxPressure(desiredSpeed, index)
+    fid = fopen(sprintf("./output/desiredSpeeds/ovito_file_DS=%.1f_%d.txt", desiredSpeed, index));
     fmax = 0.0;
     # Read file
     while (!feof(fid))

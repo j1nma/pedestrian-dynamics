@@ -9,6 +9,7 @@ from numpy import zeros
 from oct2py import octave
 octave.addpath('./scripts/')
 
-desiredSpeed = 5.0
-func = 'maxPressure(' + str(desiredSpeed) + ')'
+desiredSpeed = 3.0
+index = 0
+func = 'maxPressure(' + str(desiredSpeed) + ',' + str(index) + ')'
 octave.eval(func);
