@@ -258,7 +258,6 @@ public class SocialForceModel {
 
 	/**
 	 * For the ones that make contact, add a fake particle to the set of neighbours.
-	 * TODO refactor codigo repetido y casos ifs q nunca entraria
 	 */
 	private static void addFakeWallParticles(Particle particle, Set<Particle> neighbours) {
 		int fakeId = -1;
@@ -282,7 +281,6 @@ public class SocialForceModel {
 		boolean outsideGap = particle.getPosition().getX() < diameterStart || particle.getPosition().getX() > (diameterStart + boxDiameter);
 
 		double bottomWall = boxHeight / lengthDividedBy;
-//		double upperWall = boxHeight * (1 + 1 / lengthDividedBy);
 
 		// Analyse bottom wall
 		if (particle.getPosition().getY() >= bottomWall
@@ -293,37 +291,21 @@ public class SocialForceModel {
 				bottomWallParticle.setVelocity(Vector2D.ZERO);
 				neighbours.add(bottomWallParticle);
 			} else {
-				if (boxDiameter > 0.0) {
-					if (particle.getPosition().getX() - particle.getRadius() <= diameterStart
-							&& particle.getPosition().distance(new Vector2D(diameterStart, bottomWall)) < particle.getRadius()) {
-						Particle leftDiameterStartParticle = new Particle(fakeId, 0.0, 0.0);
-						leftDiameterStartParticle.setPosition(new Vector2D(diameterStart, bottomWall));
-						leftDiameterStartParticle.setVelocity(Vector2D.ZERO);
-						neighbours.add(leftDiameterStartParticle);
-					} else if (particle.getPosition().getX() + particle.getRadius() >= diameterStart + boxDiameter
-							&& particle.getPosition().distance(new Vector2D(diameterStart + boxDiameter, bottomWall)) < particle.getRadius()) {
-						Particle rightDiameterStartParticle = new Particle(fakeId, 0.0, 0.0);
-						rightDiameterStartParticle.setPosition(new Vector2D(diameterStart + boxDiameter, bottomWall));
-						rightDiameterStartParticle.setVelocity(Vector2D.ZERO);
-						neighbours.add(rightDiameterStartParticle);
-					}
-				} else {
-					if (particle.getPosition().getY() - particle.getRadius() <= bottomWall) {
-						Particle closedDiameterParticle = new Particle(fakeId, particle.getRadius(), particle.getMass());
-						closedDiameterParticle.setPosition(new Vector2D(particle.getPosition().getX(), bottomWall - particle.getRadius()));
-						closedDiameterParticle.setVelocity(Vector2D.ZERO);
-						neighbours.add(closedDiameterParticle);
-					}
+				if (particle.getPosition().getX() - particle.getRadius() <= diameterStart
+						&& particle.getPosition().distance(new Vector2D(diameterStart, bottomWall)) < particle.getRadius()) {
+					Particle leftDiameterStartParticle = new Particle(fakeId, 0.0, 0.0);
+					leftDiameterStartParticle.setPosition(new Vector2D(diameterStart, bottomWall));
+					leftDiameterStartParticle.setVelocity(Vector2D.ZERO);
+					neighbours.add(leftDiameterStartParticle);
+				} else if (particle.getPosition().getX() + particle.getRadius() >= diameterStart + boxDiameter
+						&& particle.getPosition().distance(new Vector2D(diameterStart + boxDiameter, bottomWall)) < particle.getRadius()) {
+					Particle rightDiameterStartParticle = new Particle(fakeId, 0.0, 0.0);
+					rightDiameterStartParticle.setPosition(new Vector2D(diameterStart + boxDiameter, bottomWall));
+					rightDiameterStartParticle.setVelocity(Vector2D.ZERO);
+					neighbours.add(rightDiameterStartParticle);
 				}
 			}
 		}
-		// Analyse top wall
-//		else if (particle.getPosition().getY() + particle.getRadius() >= upperWall) {
-//			Particle topWallParticle = new Particle(fakeId, particle.getRadius(), particle.getMass());
-//			topWallParticle.setPosition(new Vector2D(particle.getPosition().getX(), particle.getRadius() + upperWall));
-//			topWallParticle.setVelocity(Vector2D.ZERO);
-//			neighbours.add(topWallParticle);
-//		}
 	}
 
 	private static void printFrame(BufferedWriter buffer, List<Particle> particles) throws IOException {
