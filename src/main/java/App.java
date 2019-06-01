@@ -24,6 +24,8 @@ public class App {
 
 	private static final double LENGTH_DIVIDED_BY = 2;
 
+	private static String CURRENT_RUN_INDEX = "0"; //i.e.: 0, 1 and 2 for 3 simulations
+
 	private static final ParticleGenerator particleGenerator = new ParticleGenerator();
 
 	public static void main(String[] args) throws IOException {
@@ -59,6 +61,8 @@ public class App {
 			System.out.println("Delta t: " + options.deltaT);
 		}
 
+		CURRENT_RUN_INDEX = options.index;
+
 		runAlgorithm(
 				particleGenerator.generate(options.N, options.length, options.width,
 						MIN_PARTICLE_DIAMETER, MAX_PARTICLE_DIAMETER, PARTICLE_MASS,
@@ -90,10 +94,10 @@ public class App {
 	                                 double B,
 	                                 double τ) throws IOException {
 
-		FileWriter fw = new FileWriter(String.valueOf(Paths.get(OVITO_FILE + "_DS=" + desiredSpeed + ".txt")));
+		FileWriter fw = new FileWriter(String.valueOf(Paths.get(OVITO_FILE + "_DS=" + desiredSpeed + "_" + CURRENT_RUN_INDEX + ".txt")));
 		BufferedWriter writeFileBuffer = new BufferedWriter(fw);
 
-		FileWriter fw3 = new FileWriter(String.valueOf(Paths.get(FLOW_FILE_NAME + "_DS=" + desiredSpeed + ".txt")));
+		FileWriter fw3 = new FileWriter(String.valueOf(Paths.get(FLOW_FILE_NAME + "_DS=" + desiredSpeed + "_" + CURRENT_RUN_INDEX + ".txt")));
 		BufferedWriter flowFileBuffer = new BufferedWriter(fw3);
 
 		SocialForceModel.run(
