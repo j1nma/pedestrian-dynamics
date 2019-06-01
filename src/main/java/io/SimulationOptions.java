@@ -115,4 +115,13 @@ public class SimulationOptions extends OptionsBase {
 			defaultValue = "0.5"
 	)
 	public double τ;
+
+	@Option(
+			name = "index",
+			abbrev = 'x',
+			help = "Index for multiple runs.",
+			category = "startup",
+			defaultValue = "t"
+	)
+	public String index;
 }
