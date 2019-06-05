@@ -115,8 +115,8 @@ public class SocialForceModel {
 					// Update position
 					moveParticle(p, dt);
 
-					// Relocate particles that go outside box a distance of L/10 and clear neighbours
-					if (p.getPosition().getY() < boxHeight / lengthDividedBy
+					// Relocate particles that go outside box a distance of L/2 and clear neighbours
+					if (p.getPosition().getY() + p.getRadius() < (boxHeight / lengthDividedBy) //TODO: recheck
 							&& !outOfRoom.contains(p)) {
 
 						outOfRoom.add(p);
@@ -229,16 +229,38 @@ public class SocialForceModel {
 
 		// Driving force
 		// Calculate distance between centers
-		double MARGIN = 0.1;
-		double targetX = particle.getPosition().getX();
-		if (particle.getPosition().getX() - particle.getRadius() <= boxWidth / 2 - boxDiameter / 2 + MARGIN)
-			targetX = boxWidth / 2 - boxDiameter / 2 + particle.getRadius() + MARGIN;
-		if (particle.getPosition().getX() + particle.getRadius() >= boxWidth / 2 + boxDiameter / 2 - MARGIN)
-			targetX = boxWidth / 2 + boxDiameter / 2 - particle.getRadius() - MARGIN;
-		double targetY = boxHeight / lengthDividedBy;
-		if (particle.getPosition().getY() < targetY)
-			targetY = 0;
-		particle.setDesiredTarget(new Vector2D(targetX, targetY));
+//		double MARGIN = 0.1;
+//		double targetX = particle.getPosition().getX();
+//		if (particle.getPosition().getX() - particle.getRadius() < boxWidth / 2 - boxDiameter / 2 + MARGIN)
+//			targetX = boxWidth / 2 - boxDiameter / 2 + particle.getRadius() + MARGIN;
+//		if (particle.getPosition().getX() + particle.getRadius() > boxWidth / 2 + boxDiameter / 2 - MARGIN)
+//			targetX = boxWidth / 2 + boxDiameter / 2 - particle.getRadius() - MARGIN;
+//		double targetY = boxHeight / lengthDividedBy;
+//		if (particle.getPosition().getY() < targetY)
+//			targetY = 0;
+//		particle.setDesiredTarget(new Vector2D(targetX, targetY));
+
+//		double targetX = particle.getPosition().getX();
+//		if (particle.getPosition().getX() <= boxWidth / 2 - boxDiameter / 2 + MAX_DIAMETER)
+//			targetX = boxWidth / 2 - boxDiameter / 2 + MAX_DIAMETER;
+//		if (particle.getPosition().getX() >= boxWidth / 2 + boxDiameter / 2 - MAX_DIAMETER)
+//			targetX = boxWidth / 2 + boxDiameter / 2 - MAX_DIAMETER;
+//		double targetY = boxHeight / lengthDividedBy;
+//		if (particle.getPosition().getY() < targetY)
+//			targetY = 0;
+//		particle.setDesiredTarget(new Vector2D(targetX, targetY));
+
+//		double doorStartX = boxWidth / 2 - boxDiameter / 2;
+//		double doorY = boxHeight / lengthDividedBy;
+//		Vector2D target;
+//		if (particle.getPosition().getX() < doorStartX && particle.getPosition().getY() > doorY) {
+//			target = new Vector2D(doorStartX + boxDiameter - particle.getRadius() - 0.2, doorY);
+//		} else if (particle.getPosition().getX() > doorStartX + boxDiameter && particle.getPosition().getY() > doorY) {
+//			target = new Vector2D(doorStartX + particle.getRadius() + 0.2, doorY);
+//		} else {
+//			target = new Vector2D(boxWidth / 2, 0);
+//		}
+//		particle.setDesiredTarget(target);
 
 		Vector2D FnDriving = ((particle.getVectorToTarget().subtract(particle.getVelocity()))).scalarMultiply(particle.getMass() / τ);
 		F = F.add(FnDriving);
@@ -280,6 +302,7 @@ public class SocialForceModel {
 		boolean outsideGap = particle.getPosition().getX() < diameterStart || particle.getPosition().getX() > (diameterStart + boxDiameter);
 
 		double bottomWall = boxHeight / lengthDividedBy;
+		double upperWall = boxHeight * (1 + 1 / lengthDividedBy);
 
 		// Analyse bottom wall
 		if (particle.getPosition().getY() >= bottomWall
@@ -304,6 +327,14 @@ public class SocialForceModel {
 					neighbours.add(rightDiameterStartParticle);
 				}
 			}
+		}
+
+//		 Analyse top wall
+		else if (particle.getPosition().getY() + particle.getRadius() >= upperWall) {
+			Particle topWallParticle = new Particle(fakeId, particle.getRadius(), particle.getMass());
+			topWallParticle.setPosition(new Vector2D(particle.getPosition().getX(), particle.getRadius() + upperWall));
+			topWallParticle.setVelocity(Vector2D.ZERO);
+			neighbours.add(topWallParticle);
 		}
 	}
 
