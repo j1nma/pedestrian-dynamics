@@ -65,7 +65,7 @@ public class SocialForceModel {
 
 		// Print frame
 		int currentFrame = 1;
-		int printFrame = (int) Math.ceil(printDeltaT / dt);
+		int printFrame = (int) Math.ceil(printDeltaT / dt); //TODO: CHECK THIS WITH GERMAN
 
 		// Save N for 'Particles Left;
 		int N = particles.size();
