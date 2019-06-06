@@ -362,6 +362,6 @@ public class SocialForceModel {
 				p.getPosition().getY() + " " +
 				p.getVelocity().getX() + " " +
 				p.getVelocity().getY() + " " +
-				p.calculatePressure() + " \n";
+				p.calculatePressure() + " \n"; //TODO: en post
 	}
 }
