@@ -29,7 +29,7 @@ public class Particle implements Cloneable {
 		this.mass = mass;
 		this.normalForce = 0.0;
 		this.desiredSpeed = desiredSpeed;
-		this.desiredTarget = new Vector2D(10, 0);
+		this.desiredTarget = new Vector2D(10, 9);
 		this.neighbours = new HashSet<>();
 	}
 

@@ -229,16 +229,16 @@ public class SocialForceModel {
 
 		// Driving force
 		// Calculate distance between centers
-//		double MARGIN = 0.1;
-//		double targetX = particle.getPosition().getX();
-//		if (particle.getPosition().getX() - particle.getRadius() < boxWidth / 2 - boxDiameter / 2 + MARGIN)
-//			targetX = boxWidth / 2 - boxDiameter / 2 + particle.getRadius() + MARGIN;
-//		if (particle.getPosition().getX() + particle.getRadius() > boxWidth / 2 + boxDiameter / 2 - MARGIN)
-//			targetX = boxWidth / 2 + boxDiameter / 2 - particle.getRadius() - MARGIN;
-//		double targetY = boxHeight / lengthDividedBy;
-//		if (particle.getPosition().getY() < targetY)
-//			targetY = 0;
-//		particle.setDesiredTarget(new Vector2D(targetX, targetY));
+		double MARGIN = 0.1;
+		double targetX = particle.getPosition().getX();
+		if (particle.getPosition().getX() - particle.getRadius() < boxWidth / 2 - boxDiameter / 2 + MARGIN)
+			targetX = boxWidth / 2 - boxDiameter / 2 + particle.getRadius() + MARGIN;
+		if (particle.getPosition().getX() + particle.getRadius() > boxWidth / 2 + boxDiameter / 2 - MARGIN)
+			targetX = boxWidth / 2 + boxDiameter / 2 - particle.getRadius() - MARGIN;
+		double targetY = (boxHeight / lengthDividedBy) - 1; // 9 m
+		if (particle.getPosition().getY() < (boxHeight / lengthDividedBy))
+			targetY = 0;
+		particle.setDesiredTarget(new Vector2D(targetX, targetY));
 
 //		double targetX = particle.getPosition().getX();
 //		if (particle.getPosition().getX() <= boxWidth / 2 - boxDiameter / 2 + MAX_DIAMETER)
