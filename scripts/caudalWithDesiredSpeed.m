@@ -35,9 +35,8 @@ function caudalWithDesiredSpeed(desiredSpeed, index)
  %    endfor
 
 
-    % TP5 Caudal
-
-    N = 15;
+    % Esto es para el punto C (una):
+    N = 20;
 
     lowerLimit = 1;
     finalLowerLimit = (size(times,2) - 1) - N + 1;
@@ -45,17 +44,15 @@ function caudalWithDesiredSpeed(desiredSpeed, index)
     numberOfFlows = finalLowerLimit - lowerLimit + 1;
 
     flows = zeros(numberOfFlows + 1, 1);
-    flows(1) = 0.0;
 
     deltaTs = zeros(numberOfFlows + 1, 1);
-    deltaTs(1) = 0.0;
 
     for i = lowerLimit:1:finalLowerLimit
         ti = times(i);
         tf = times(i + N);
         deltaT = tf - ti;
         flows((i-lowerLimit)+2) = N / deltaT;
-        deltaTs((i-lowerLimit)+2) = times(i + N);
+        deltaTs((i-lowerLimit)+2) = tf;
     endfor
 
     props = {"marker", '.', 'LineStyle', 'none'};
@@ -64,6 +61,8 @@ function caudalWithDesiredSpeed(desiredSpeed, index)
     xlabel("Tiempo (s)");
     ylabel("Caudal [part./s]");
     legend("location", "eastoutside");
+    xlim([0, 100])
+    ylim([1, 3.5])
     grid on
 
     print(sprintf("%s/caudal-DS=%.1f.png", './output/desiredSpeeds', desiredSpeed), "-dpngcairo", "-F:12")

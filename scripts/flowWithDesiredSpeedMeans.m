@@ -26,52 +26,37 @@ function flowWithDesiredSpeedMeans(desiredSpeed, simulations)
         evacuationTimes(i+1) = times(end);
     endfor
 
-    % hold off
+    hold off
 
-    % props = {"marker", '.', 'LineStyle', 'none'};
-    % h = errorbar((0:numberOfPedestrians), mean(means), std(means), sprintf(";Vd = %.1f m/s;", desiredSpeed));
-    % set(h, props{:})
-    % xlabel("Número de peatones que salieron");
-    % ylabel("Tiempo (s)");
-    % legend("location", "eastoutside");
-    % xlim([0, numberOfPedestrians + 10])
-    % grid on
+    props = {"marker", '.', 'LineStyle', 'none'};
+    h = errorbar((0:numberOfPedestrians), mean(means), std(means), sprintf(";Vd = %.1f m/s;", desiredSpeed));
+    set(h, props{:})
+    xlabel("Número de peatones que salieron");
+    ylabel("Tiempo (s)");
+    legend("location", "eastoutside");
+    xlim([0, numberOfPedestrians + 10])
+    grid on
 
-    % m = mean(evacuationTimes);
-    % means_file_id = fopen('./output/desiredSpeeds/means.txt', 'a');
-    % fprintf(means_file_id, '%e ', m);
-    % fclose(means_file_id);
+    m = mean(evacuationTimes);
+    means_file_id = fopen('./output/desiredSpeeds/means.txt', 'a');
+    fprintf(means_file_id, '%e ', m);
+    fclose(means_file_id);
 
-    % s = std(evacuationTimes);
-    % stds_file_id = fopen('./output/desiredSpeeds/stds.txt', 'a');
-    % fprintf(stds_file_id, '%e ', s);
-    % fclose(stds_file_id);
+    s = std(evacuationTimes);
+    stds_file_id = fopen('./output/desiredSpeeds/stds.txt', 'a');
+    fprintf(stds_file_id, '%e ', s);
+    fclose(stds_file_id);
 
+    % Esto es para el punto B:
     % print(sprintf("%s/flow-DS=%.1f-Mean.png", './output/desiredSpeeds', desiredSpeed), "-dpngcairo", "-F:12")
 
 
-
-
-    % interval = 5;
-
-    % flows = zeros(simulations, numberOfPedestrians-interval + 1);
-
-    % x = mean(means);
-
-    % for j = 0:1:simulations-1
-    %     for i = 1:1:numberOfPedestrians-interval
-    %         flows(j+1, i+1) = max(find(means(j+1, i:end) < (means(j+1, i) + interval))) / interval;
-    %     endfor
-    % endfor
-
+    % Esto es para el punto C (medias):
     N = 20;
     lowerLimit = 1;
     finalLowerLimit = (size(times,2) - 1) - N + 1;
     
 	numberOfFlows = finalLowerLimit - lowerLimit + 1;
-    
-	% flows = zeros(numberOfFlows + 1, 1);
-	% deltaTs = zeros(simulations, numberOfPedestrians-interval + 1);
 
     flows = zeros(simulations, numberOfFlows + 1);
 
@@ -88,12 +73,13 @@ function flowWithDesiredSpeedMeans(desiredSpeed, simulations)
 	endfor
     
     props = {"marker", '.', 'LineStyle', 'none'};
-    % h = plot(times, flows, sprintf(";Vd = %.1f m/s;", desiredSpeed));
     h = errorbar(mean(deltaTs), mean(flows), std(flows), sprintf(";Vd = %.1f m/s;", desiredSpeed));
     set(h, props{:})
     xlabel("Tiempo (s)");
-    ylabel("Caudal");
+    ylabel("Caudal [part./s]");
     legend("location", "eastoutside");
+    xlim([0, 100])
+    ylim([1, 3.5])
     grid on
 
     print(sprintf("%s/caudal-DS=%.1f-Mean.png", './output/desiredSpeeds', desiredSpeed), "-dpngcairo", "-F:12")
