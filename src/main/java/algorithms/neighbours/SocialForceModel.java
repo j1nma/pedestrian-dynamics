@@ -65,7 +65,7 @@ public class SocialForceModel {
 
 		// Print frame
 		int currentFrame = 1;
-		int printFrame = (int) Math.ceil(printDeltaT / dt); //TODO: CHECK THIS WITH GERMAN
+		int printFrame = (int) Math.ceil(printDeltaT / dt);
 
 		// Save N for 'Particles Left;
 		int N = particles.size();
@@ -116,7 +116,7 @@ public class SocialForceModel {
 					moveParticle(p, dt);
 
 					// Relocate particles that go outside box a distance of L/2 and clear neighbours
-					if (p.getPosition().getY() + p.getRadius() < (boxHeight / lengthDividedBy) //TODO: recheck
+					if (p.getPosition().getY() < (boxHeight / lengthDividedBy)
 							&& !outOfRoom.contains(p)) {
 
 						outOfRoom.add(p);
@@ -213,54 +213,33 @@ public class SocialForceModel {
 				sum = sum.add(new Vector2D(Fx, Fy));
 			}
 
-			// Social force: do not use fake wall particles for social force
-			if (p2.getId() > 0) {
-				double FnSocial = -A * Math.exp((eps) / B);
+			/* Start Social force */
+			double FnSocial = -A * Math.exp((eps) / B);
 
-				double FxSocial = FnSocial * Enx;
-				double FySocial = FnSocial * Eny;
+			double FxSocial = FnSocial * Enx;
+			double FySocial = FnSocial * Eny;
 
-				sum = sum.add(new Vector2D(FxSocial, FySocial));
-				/* End Social force */
-			}
+			sum = sum.add(new Vector2D(FxSocial, FySocial));
+			/* End Social force */
 
 			return sum;
 		}).reduce(F, Vector2D::add);
 
 		// Driving force
 		// Calculate distance between centers
-		double MARGIN = 0.1;
 		double targetX = particle.getPosition().getX();
-		if (particle.getPosition().getX() - particle.getRadius() < boxWidth / 2 - boxDiameter / 2 + MARGIN)
-			targetX = boxWidth / 2 - boxDiameter / 2 + particle.getRadius() + MARGIN;
-		if (particle.getPosition().getX() + particle.getRadius() > boxWidth / 2 + boxDiameter / 2 - MARGIN)
-			targetX = boxWidth / 2 + boxDiameter / 2 - particle.getRadius() - MARGIN;
-		double targetY = (boxHeight / lengthDividedBy) - 1; // 9 m
-		if (particle.getPosition().getY() < (boxHeight / lengthDividedBy))
-			targetY = 0;
+		double targetY = 0;
+		if (particle.getPosition().getY() > boxHeight / lengthDividedBy) {
+			if (particle.getPosition().getX() - particle.getRadius() < boxWidth / 2 - boxDiameter / 2) {
+				targetX = (boxWidth / 2 - boxDiameter / 2) + particle.getRadius();
+				targetY = boxHeight / lengthDividedBy;
+			}
+			if (particle.getPosition().getX() + particle.getRadius() > boxWidth / 2 + boxDiameter / 2) {
+				targetX = (boxWidth / 2 + boxDiameter / 2) - particle.getRadius();
+				targetY = boxHeight / lengthDividedBy;
+			}
+		}
 		particle.setDesiredTarget(new Vector2D(targetX, targetY));
-
-//		double targetX = particle.getPosition().getX();
-//		if (particle.getPosition().getX() <= boxWidth / 2 - boxDiameter / 2 + MAX_DIAMETER)
-//			targetX = boxWidth / 2 - boxDiameter / 2 + MAX_DIAMETER;
-//		if (particle.getPosition().getX() >= boxWidth / 2 + boxDiameter / 2 - MAX_DIAMETER)
-//			targetX = boxWidth / 2 + boxDiameter / 2 - MAX_DIAMETER;
-//		double targetY = boxHeight / lengthDividedBy;
-//		if (particle.getPosition().getY() < targetY)
-//			targetY = 0;
-//		particle.setDesiredTarget(new Vector2D(targetX, targetY));
-
-//		double doorStartX = boxWidth / 2 - boxDiameter / 2;
-//		double doorY = boxHeight / lengthDividedBy;
-//		Vector2D target;
-//		if (particle.getPosition().getX() < doorStartX && particle.getPosition().getY() > doorY) {
-//			target = new Vector2D(doorStartX + boxDiameter - particle.getRadius() - 0.2, doorY);
-//		} else if (particle.getPosition().getX() > doorStartX + boxDiameter && particle.getPosition().getY() > doorY) {
-//			target = new Vector2D(doorStartX + particle.getRadius() + 0.2, doorY);
-//		} else {
-//			target = new Vector2D(boxWidth / 2, 0);
-//		}
-//		particle.setDesiredTarget(target);
 
 		Vector2D FnDriving = ((particle.getVectorToTarget().subtract(particle.getVelocity()))).scalarMultiply(particle.getMass() / τ);
 		F = F.add(FnDriving);

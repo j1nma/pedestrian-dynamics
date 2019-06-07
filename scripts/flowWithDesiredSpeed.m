@@ -1,7 +1,7 @@
 function flowWithDesiredSpeed(desiredSpeed, index, lastIndex)
     fid = fopen(sprintf("./output/desiredSpeeds/flow_file_DS=%.1f_%d.txt", desiredSpeed, index));
 
-    numberOfParticles = 200
+    numberOfParticles = 200;
 
     # Read initial out time
     times = [0.0];

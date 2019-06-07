@@ -28,7 +28,7 @@ function caudalWithDesiredSpeed(desiredSpeed, index)
  %        #endif
  %        evacuatedIPlusInterval = max(find(times(i:end) < (times(i) + interval)));
  %        evacuatedI = max(find(times(i:end) < times(i)));
- %        if(isempty(evacuatedI))
+ %        if(isempty(evacuatedI))s
  %            evacuatedI = 0;
  %        endif
  %    	flows(i+1) = (evacuatedIPlusInterval - evacuatedI) / interval;
