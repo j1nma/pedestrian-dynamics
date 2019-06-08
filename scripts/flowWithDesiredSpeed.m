@@ -1,17 +1,15 @@
-function flowWithDesiredSpeed(desiredSpeed, index, lastIndex)
+function flowWithDesiredSpeed(desiredSpeed, index, lastIndex, numberOfParticles)
     fid = fopen(sprintf("./output/desiredSpeeds/flow_file_DS=%.1f_%d.txt", desiredSpeed, index));
 
-    numberOfParticles = 200;
-
-    # Read initial out time
+    % Read initial out time
     times = [0.0];
     initialT = str2num(fgetl(fid));
     times = [times, initialT];
 
-    # Read file
+    % Read file
     lineCounter = 1;
     while (!feof(fid))
-        # Parse out time
+        % Parse out time
         times = [times, str2num(fgetl(fid))];
     endwhile
 

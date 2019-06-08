@@ -1,21 +1,18 @@
-function flowWithDesiredSpeedMeans(desiredSpeed, simulations)
-
-    numberOfPedestrians = 200;
-
-    means = zeros(simulations, numberOfPedestrians + 1); % N = numberOfPedestrians
+function flowWithDesiredSpeedMeans(desiredSpeed, simulations, numberOfPedestrians)
+    means = zeros(simulations, numberOfPedestrians + 1);
     evacuationTimes = zeros(simulations, 1);
     for i = 0:1:simulations-1
         fid = fopen(sprintf("./output/desiredSpeeds/flow_file_DS=%.1f_%d.txt", desiredSpeed, i));
 
-        # Read initial out time
+        % Read initial out time
         times = [0.0];
         initialT = str2num(fgetl(fid));
         times = [times, initialT];
 
-        # Read file
+        % Read file
         lineCounter = 1;
         while (!feof(fid))
-            # Parse out time
+            % Parse out time
             times = [times, str2num(fgetl(fid))];
         endwhile
 
@@ -24,6 +21,19 @@ function flowWithDesiredSpeedMeans(desiredSpeed, simulations)
         means(i+1, :) = times;
 
         evacuationTimes(i+1) = times(end);
+
+        % Graph discharge
+        props = {"marker", '.', 'LineStyle', 'none'};
+        h = plot((0:numberOfPedestrians), times, sprintf(";Egreso %d;", i));
+        set(h, props{:})
+        xlabel("Número de peatones que salieron");
+        ylabel("Tiempo (s)");
+        legend("location", "eastoutside");
+        grid on
+
+        hold all
+
+        print(sprintf("%s/flow-N=%d-DS=%.1f.png", './output/desiredSpeeds', numberOfPedestrians, desiredSpeed), "-dpngcairo", "-F:12")
     endfor
 
     hold off
@@ -48,20 +58,15 @@ function flowWithDesiredSpeedMeans(desiredSpeed, simulations)
     fclose(stds_file_id);
 
     % Esto es para el punto B:
-    % print(sprintf("%s/flow-DS=%.1f-Mean.png", './output/desiredSpeeds', desiredSpeed), "-dpngcairo", "-F:12")
-
+    print(sprintf("%s/flow-DS=%.1f-Mean.png", './output/desiredSpeeds', desiredSpeed), "-dpngcairo", "-F:12")
 
     % Esto es para el punto C (medias):
     N = 20;
     lowerLimit = 1;
     finalLowerLimit = (size(times,2) - 1) - N + 1;
-    
 	numberOfFlows = finalLowerLimit - lowerLimit + 1;
-
     flows = zeros(simulations, numberOfFlows + 1);
-
     deltaTs = zeros(simulations, numberOfFlows + 1);
-    
     for j = 0:1:simulations-1
 		for i = lowerLimit:1:finalLowerLimit
         	ti = means(j+1, i);
@@ -71,15 +76,15 @@ function flowWithDesiredSpeedMeans(desiredSpeed, simulations)
         	deltaTs(j+1, (i-lowerLimit)+2) = tf;
 		endfor
 	endfor
-    
     props = {"marker", '.', 'LineStyle', 'none'};
     h = errorbar(mean(deltaTs), mean(flows), std(flows), sprintf(";Vd = %.1f m/s;", desiredSpeed));
     set(h, props{:})
     xlabel("Tiempo (s)");
     ylabel("Caudal [part./s]");
     legend("location", "eastoutside");
-    xlim([0, 100])
-    ylim([1, 3.5])
+    % Customize for a single graph
+    % xlim([0, 100])
+    % ylim([1, 3.5])
     grid on
 
     print(sprintf("%s/caudal-DS=%.1f-Mean.png", './output/desiredSpeeds', desiredSpeed), "-dpngcairo", "-F:12")

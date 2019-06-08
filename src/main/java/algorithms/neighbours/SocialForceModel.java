@@ -67,7 +67,7 @@ public class SocialForceModel {
 		int currentFrame = 1;
 		int printFrame = (int) Math.ceil(printDeltaT / dt);
 
-		// Save N for 'Particles Left;
+		// Save N for 'Particles Left:';
 		int N = particles.size();
 
 		// Particles out of room but still moving

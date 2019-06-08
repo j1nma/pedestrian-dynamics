@@ -1,15 +1,9 @@
 import os
-import subprocess
-import csv
-import numpy
-import matplotlib.pyplot as plt
-import math
-from numpy import vstack
-from numpy import zeros
+import sys
 from oct2py import octave
 octave.addpath('./scripts/')
 
-desiredSpeed = 2.0
-index = 0
+desiredSpeed = sys.argv[1]
+index = sys.argv[2]
 func = 'maxPressure(' + str(desiredSpeed) + ',' + str(index) + ')'
 octave.eval(func);
